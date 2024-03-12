@@ -80,18 +80,6 @@ function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
     return solution
 end
 
-function plot_trajectory(solution, p::NamedTuple)
-    ϕ = solution.u
-    positions = zeros(size(ϕ)[1], 3)
-    for i = 1:size(ϕ)[1]
-        positions[i, :] .= x(ϕ[i], p.x_0)
-    end
-    display(plot!(positions[:, 1], positions[:, 3]))
-    return nothing
-end
-
-
 p = (a=a, μ=μ)
 
 solution = run_filament(p, 60.0, 100)
-# plot_trajectory(solution, p)
