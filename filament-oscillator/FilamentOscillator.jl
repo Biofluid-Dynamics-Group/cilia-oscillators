@@ -10,12 +10,12 @@ include("../stokes/GreensFunctions.jl")
 μ = 1.0
 a = 7e-2
 
-N = 5
+N = 25
 h = L/(N - 1)
 s = [(i)*h for i=1:N]
 
 function R(ψ_2::Real)
-    return [cos(ψ_2) 0 -sin(ψ_2); 0 1 0; sin(ψ_2) 0 cos(ψ_2)]
+    return [cos(ψ_2) 0. -sin(ψ_2); 0. 1. 0.; sin(ψ_2) 0. cos(ψ_2)]
 end
 
 function x(s::Real, ψ::Vector)
@@ -23,7 +23,7 @@ function x(s::Real, ψ::Vector)
 end
 
 function dR_dψ_2(ψ_2::Real)
-    return [-sin(ψ_2) 0 -cos(ψ_2); 0 1 0; cos(ψ_2) 0 -sin(ψ_2)]
+    return [-sin(ψ_2) 0. -cos(ψ_2); 0. 1. 0.; cos(ψ_2) 0. -sin(ψ_2)]
 end
 
 function K(s::Real, ψ::Vector)
@@ -49,7 +49,7 @@ function Mₕ(ψ::Vector, μ::Real, a::Real)
 end
 
 function q_ref(ψ::Vector, μ::Real, a::Real)
-    return Kₕ(ψ)'*inv(Mₕ(ψ, μ, a))*Kₕ(ψ)*[2*π/T, 0.0]
+    return Kₕ(ψ)'*inv(Mₕ(ψ, μ, a))*Kₕ(ψ)*[2.0*π/T, 0.0]
 end
 
 function ψ_dot(ψ::Vector, μ::Real, a::Real)
@@ -75,11 +75,39 @@ end
 
 function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
     t_span = (0.0, final_time)
-    problem = ODEProblem(filament_oscillator!, [2*π, 0.0], t_span, p)
+    problem = ODEProblem(filament_oscillator!, [π, 0.0], t_span, p)
     solution = solve(problem, AB4(), dt=final_time/num_steps)
     return solution
 end
 
+function plot_solution(solution::ODESolution)
+    ψ_array = stack(solution.u, dims=1)
+    p = plot(
+        xlim=(-L+1.0, L+1.0), ylim=(0.0, L+1.0), title="Filament movement",
+        xaxis="x [μm]", yaxis="z [μm]", palette=:inferno
+    )
+    for ψ in ψ_array
+        positions = zeros(N, 3)
+        for i=1:N
+            positions[i, :] += ξ(s[i], ψ)
+        end
+        plot!(positions[:, 1], positions[:, 3])
+    end
+    display(p)
+    return nothing
+end
+
+function plot_trajectory(solution::ODESolution)
+    ψ_array = stack(solution.u, dims=1)
+    t = solution.t
+    p = plot(title="Phase evolution", xaxis="t [ms]")
+    plot!(t, ψ_array[:, 1], label="ψ₁")
+    plot!(t, ψ_array[:, 2], label="ψ₂")
+    return nothing
+end
+
 p = (a=a, μ=μ)
 
-solution = run_filament(p, 60.0, 100)
+solution = run_filament(p, T, 100)
+plot_solution(solution)
+# plot_trajectory(solution)
