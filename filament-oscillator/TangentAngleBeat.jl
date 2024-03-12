@@ -5,7 +5,7 @@ using FastGaussQuadrature
 order = 20  # Quadrature order
 nodes, weights = gausslegendre(order)
 
-T = 2.0*π
+T = 60.
 L = 19.
 θ_0 = π/2.1
 f_eff = 0.3
