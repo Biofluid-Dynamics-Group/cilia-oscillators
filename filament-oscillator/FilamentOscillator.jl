@@ -53,10 +53,8 @@ function q_ref(ψ::Vector, μ::Real, a::Real)
 end
 
 function ψ_dot(ψ::Vector, μ::Real, a::Real)
-    M = Mₕ(ψ, μ, a)
-    K = Kₕ(ψ)
     q = q_ref(ψ, μ, a)
-    matrix = [M -K; -K' zeros(2, 2)]
+    matrix = [Mₕ(ψ, μ, a) -Kₕ(ψ); -Kₕ(ψ)' zeros(2, 2)]
     rhs = vcat(zeros(3*N), -q)
     problem = LinearProblem(matrix, rhs)
     solution = solve(problem, KrylovJL_GMRES())
@@ -81,17 +79,20 @@ function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
 end
 
 function plot_solution(solution::ODESolution)
-    ψ_array = stack(solution.u, dims=1)
+    ψ_array = solution.u
     p = plot(
-        xlim=(-L+1.0, L+1.0), ylim=(0.0, L+1.0), title="Filament movement",
-        xaxis="x [μm]", yaxis="z [μm]", palette=:inferno
+        xlim=(-L+1.0, L+1.0), ylim=(-L/2., L+1.0), title="Filament movement",
+        xaxis="x [μm]", yaxis="z [μm]", legend=false
     )
-    for ψ in ψ_array
+    color_scheme = palette(:twilight, size(ψ_array)[1], rev=true)
+    i = 1
+    for (i, ψ) in enumerate(ψ_array)
         positions = zeros(N, 3)
-        for i=1:N
-            positions[i, :] += ξ(s[i], ψ)
+        for j=1:N
+            positions[j, :] += x(s[j], ψ)
         end
-        plot!(positions[:, 1], positions[:, 3])
+        plot!(positions[:, 1], positions[:, 3], color=color_scheme[i])
+        i += 1
     end
     display(p)
     return nothing
@@ -103,11 +104,12 @@ function plot_trajectory(solution::ODESolution)
     p = plot(title="Phase evolution", xaxis="t [ms]")
     plot!(t, ψ_array[:, 1], label="ψ₁")
     plot!(t, ψ_array[:, 2], label="ψ₂")
+    display(p)
     return nothing
 end
 
 p = (a=a, μ=μ)
 
 solution = run_filament(p, T, 100)
-plot_solution(solution)
+# plot_solution(solution)
 # plot_trajectory(solution)
