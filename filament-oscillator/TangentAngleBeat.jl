@@ -2,7 +2,7 @@ using LinearAlgebra
 using FastGaussQuadrature
 
 
-order = 20  # Quadrature order
+order = 100  # Quadrature order
 nodes, weights = gausslegendre(order)
 
 T = 60.
@@ -21,7 +21,7 @@ c = (L + w)/T_rec
 function θ(s::Real, t::Real)
     period_t = mod(t, T)
     if period_t < T_eff
-        return θ_eff(t)
+        return θ_eff(period_t)
     else
         return θ_rec(s, period_t - T_eff)
     end
@@ -105,9 +105,9 @@ end
 function dθ_dt(s::Real, t::Real)
     period_t = mod(t, T)
     if period_t < T_eff
-        return dθ_eff_dt(t)
+        return dθ_eff_dt(period_t)
     else
-        return dθ_rec_dt(s, t)
+        return dθ_rec_dt(s, period_t - T_eff)
     end
 end
 
@@ -116,10 +116,10 @@ function dθ_eff_dt(t::Real)
 end
 
 function dg_dx(u::Real)
-    if u ≤ 0.5 || u ≥ 0.5
+    if u ≤ -0.5 || u ≥ 0.5
         return 0.0
     else
-        return -4.0*(u^2 + 1.0)*sech(4.0*u/(4.0*u^2 - 1.0))^2/((1.0 - 4.0*u^2)^2)
+        return 4.0*(4.0*u^2 + 1.0)*sech(4.0*u/(4.0*u^2 - 1.0))^2/((1.0 - 4.0*u^2)^2)
     end
 end
 
