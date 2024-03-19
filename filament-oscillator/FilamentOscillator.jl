@@ -4,7 +4,7 @@ using DifferentialEquations
 using Plots
 
 
-include("TangentAngleBeat.jl")
+include("TangentAngleOscillator.jl")
 include("../stokes/GreensFunctions.jl")
 
 μ = 1.0
@@ -48,8 +48,16 @@ function Mₕ(ψ::Vector, μ::Real, a::Real)
     return mobility
 end
 
+function ω(ψ::Vector)
+    if ψ[1] < f_eff*2.0*π
+        return [2.0*π/T, -θ_0*sin(ψ[1]/(2.0*f_eff))*π/T_eff]
+    else
+        return [2.0*π/T, θ_0*(1 - f_ψ)*cos(ψ[1]/(2.0*(1.0 - f_eff)) - π/2.0)*π/T_rec]
+    end
+end
+
 function q_ref(ψ::Vector, μ::Real, a::Real)
-    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*[2.0*π/T, 0.0])
+    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*ω(ψ))
 end
 
 function ψ_dot(ψ::Vector, μ::Real, a::Real)
