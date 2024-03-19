@@ -2,7 +2,7 @@ using LinearAlgebra
 using FastGaussQuadrature
 
 
-order = 100  # Quadrature order
+order = 10  # Quadrature order
 nodes, weights = gausslegendre(order)
 
 T = 60.
