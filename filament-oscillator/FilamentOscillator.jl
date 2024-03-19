@@ -10,7 +10,7 @@ include("../stokes/GreensFunctions.jl")
 μ = 1.0
 a = 7e-2
 
-N = 25
+N = 2
 h = L/(N - 1)
 s = [(i)*h for i=1:N]
 
@@ -41,24 +41,33 @@ function Mₕ(ψ::Vector, μ::Real, a::Real)
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             mobility[α:(α + 2), β:(β + 2)] .= rotne_prager_blake_tensor(
-                x(s[i], ψ), x(s[j], ψ), μ, a
-            )
+                    x(s[i], ψ), x(s[j], ψ), μ, a
+                )
         end
     end
     return mobility
 end
 
 function q_ref(ψ::Vector, μ::Real, a::Real)
-    return Kₕ(ψ)'*inv(Mₕ(ψ, μ, a))*Kₕ(ψ)*[2.0*π/T, 0.0]
+    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*[2.0*π/T, 0.0])
 end
 
 function ψ_dot(ψ::Vector, μ::Real, a::Real)
     q = q_ref(ψ, μ, a)
-    matrix = [Mₕ(ψ, μ, a) -Kₕ(ψ); -Kₕ(ψ)' zeros(2, 2)]
+    K_matrix = Kₕ(ψ)
+    matrix = [Mₕ(ψ, μ, a) -K_matrix; -K_matrix' zeros(2, 2)]
+    # M_matrix = Mₕ(ψ, μ, a)
     rhs = vcat(zeros(3*N), -q)
-    problem = LinearProblem(matrix, rhs)
-    solution = solve(problem, KrylovJL_GMRES())
-    dψ_dt = solution.u[end-1:end]
+    # problem = LinearProblem(matrix, rhs)
+    # solution = solve(problem, SimpleGMRES())
+    println("Matrix rank = ", rank(matrix))
+    solution = matrix\rhs
+    # dψ_dt = solution.u[end-1:end]
+    dψ_dt = solution[end-1:end]
+    println("dψ_dt = ", dψ_dt)
+    println("ψ = ", ψ)
+    println("-----------------------")
+    # dψ_dt = K_matrix\(M_matrix*((K_matrix')\q))
     return dψ_dt
 end
 
@@ -74,7 +83,7 @@ end
 function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
     t_span = (0.0, final_time)
     problem = ODEProblem(filament_oscillator!, [π, 0.0], t_span, p)
-    solution = solve(problem, AB4(), dt=final_time/num_steps)
+    solution = solve(problem, Midpoint(), dt=final_time/num_steps)
     return solution
 end
 
@@ -87,9 +96,9 @@ function plot_solution(solution::ODESolution)
     color_scheme = palette(:twilight, size(ψ_array)[1], rev=true)
     i = 1
     for (i, ψ) in enumerate(ψ_array)
-        positions = zeros(N, 3)
+        positions = zeros(N+1, 3)
         for j=1:N
-            positions[j, :] += x(s[j], ψ)
+            positions[j+1, :] += x(s[j], ψ)
         end
         plot!(positions[:, 1], positions[:, 3], color=color_scheme[i])
         i += 1
@@ -110,6 +119,6 @@ end
 
 p = (a=a, μ=μ)
 
-solution = run_filament(p, T, 100)
+solution = run_filament(p, T, 1000)
 # plot_solution(solution)
-# plot_trajectory(solution)
+plot_trajectory(solution)
