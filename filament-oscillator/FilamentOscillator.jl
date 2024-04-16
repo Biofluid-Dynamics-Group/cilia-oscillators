@@ -71,8 +71,8 @@ filament was discretised using spheres of radius `a`, and the filament has gener
 bending stiffness `κ`. The phase velocity is determined by solving the saddle-point system
 that serves as the equation of motion for the filament.
 """
-function ψ_dot(ψ::Vector, μ::Real, a::Real, κ::Real)
-    q = q_ref(ψ, μ, a) .- [0.0, -κ*ψ[2]]
+function ψ_dot(ψ::Vector, μ::Real, a::Real, κ_b::Real)
+    q = q_ref(ψ, μ, a) .- [0.0, -κ_b*ψ[2]]
     K_matrix = Kₕ(ψ)
     matrix = [Mₕ(ψ, μ, a) -K_matrix; -K_matrix' zeros(2, 2)]
     rhs = vcat(zeros(3*N), -q)
@@ -91,7 +91,8 @@ use with DifferentialEquations.jl solvers.
 function filament_oscillator!(dψ_dt::Vector, ψ::Vector, p::NamedTuple, t::Real)
     μ = p.μ
     a = p.a
-    rhs = ψ_dot(ψ, μ, a, t)
+    κ_b = p.κ_b
+    rhs = ψ_dot(ψ, μ, a, κ_b)
     dψ_dt[1] = rhs[1]
     dψ_dt[2] = rhs[2]
     return nothing
