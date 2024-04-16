@@ -10,7 +10,7 @@ include("../stokes/GreensFunctions.jl")
 μ = 1.0
 a = 7e-2
 
-N = 4
+N = 15
 h = L/(N - 1)
 s = [(i)*h for i=1:N]
 
@@ -82,6 +82,12 @@ function ψ_dot(ψ::Vector, μ::Real, a::Real, κ::Real)
     return dψ_dt
 end
 
+"""
+    filament_oscillator!(dψ_dt::Vector, ψ::Vector, p::NamedTuple, t::Real)
+
+Updates the phase velocity `dψ_dt` at phase `ψ` and time `t` with parameters `p` for
+use with DifferentialEquations.jl solvers.
+"""
 function filament_oscillator!(dψ_dt::Vector, ψ::Vector, p::NamedTuple, t::Real)
     μ = p.μ
     a = p.a
@@ -91,6 +97,12 @@ function filament_oscillator!(dψ_dt::Vector, ψ::Vector, p::NamedTuple, t::Real
     return nothing
 end
 
+"""
+    run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
+
+Given parameters `p`, solves the filament oscillator model from t=0 to `final_time` with
+`num_steps` timesteps using 4th order Adams-Bashforth.
+"""
 function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
     t_span = (0.0, final_time)
     problem = ODEProblem(filament_oscillator!, [2π, 0.0], t_span, p)
@@ -98,17 +110,22 @@ function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
     return solution
 end
 
+"""
+    plot_solution(solution::ODESolution)
+
+Given an ODESolution `solution` of the filament oscillator, plots the filament's movement.
+"""
 function plot_solution(solution::ODESolution)
-    ψ_array = stack(solution.u, dims=1)[begin:500:end, :]
+    ψ_array = stack(solution.u, dims=1)
     p = plot(
-        xlim=(-L+1.0, L+1.0), ylim=(-L/2., L+1.0), title="Filament movement",
+        xlim=(-L*1.1, L*1.1), ylim=(0.0, L*1.1), title="Filament movement",
         xaxis="x [μm]", yaxis="z [μm]", legend=false
     )
     color_scheme = palette(:twilight, size(ψ_array)[1], rev=true)
     for (i, ψ) in enumerate(ψ_array[:, 1])
         positions = zeros(N+1, 3)
         for j=1:N
-            positions[j, :] += ξ(s[j], ψ_array[i, :])
+            positions[j+1, :] += ξ(s[j], ψ_array[i, :])
         end
         plot!(positions[:, 1], positions[:, 3], color=color_scheme[i])
     end
@@ -116,6 +133,11 @@ function plot_solution(solution::ODESolution)
     return nothing
 end
 
+"""
+    plot_trajectory(solution::ODESolution)
+
+Given an ODESolution `solution` of the filament oscillator, plots the phase evolution.
+"""
 function plot_trajectory(solution::ODESolution)
     ψ_array = stack(solution.u, dims=1)
     t = solution.t
@@ -125,9 +147,3 @@ function plot_trajectory(solution::ODESolution)
     display(p)
     return nothing
 end
-
-p = (a=a, μ=μ)
-
-solution = run_filament(p, 45, 10_000)
-# plot_solution(solution)
-plot_trajectory(solution)
