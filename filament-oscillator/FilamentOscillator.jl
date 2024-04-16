@@ -10,7 +10,7 @@ include("../stokes/GreensFunctions.jl")
 μ = 1.0
 a = 7e-2
 
-N = 2
+N = 5
 h = L/(N - 1)
 s = [(i)*h for i=1:N]
 
@@ -48,32 +48,34 @@ function Mₕ(ψ::Vector, μ::Real, a::Real)
     return mobility
 end
 
-function ω(ψ::Vector)
-    if ψ[1] < f_eff*2.0*π
-        return [2.0*π/T, -θ_0*sin(ψ[1]/(2.0*f_eff))*π/T_eff]
+function ω(ψ::Vector, t::Real)
+    if t < f_eff*T
+        return [0.0, -θ_0*sin(π*t/T_eff)*π/T_eff]
     else
-        return [2.0*π/T, θ_0*(1 - f_ψ)*cos(ψ[1]/(2.0*(1.0 - f_eff)) - π/2.0)*π/T_rec]
+        return [2.0*π/T, θ_0*(1 - f_ψ)*cos(π*t/T_rec - π/2.0)*π/T_rec]
     end
 end
 
-function q_ref(ψ::Vector, μ::Real, a::Real)
-    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*ω(ψ))
+function q_ref(ψ::Vector, μ::Real, a::Real, t::Real)
+    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*ω(ψ, t))
 end
 
-function ψ_dot(ψ::Vector, μ::Real, a::Real)
-    q = q_ref(ψ, μ, a)
+function ψ_dot(ψ::Vector, μ::Real, a::Real, t::Real)
+    q = q_ref(ψ, μ, a, t)
     K_matrix = Kₕ(ψ)
     matrix = [Mₕ(ψ, μ, a) -K_matrix; -K_matrix' zeros(2, 2)]
+    println("M rank = ", rank(Mₕ(ψ, μ, a)))
+    println("K rank = ", rank(K_matrix))
+    display(cat([dθ_bend_dψ_1(s[i], ψ[1]) for i = 1:N]..., dims=1))
+    println("ψ = ", ψ)
     # M_matrix = Mₕ(ψ, μ, a)
     rhs = vcat(zeros(3*N), -q)
-    # problem = LinearProblem(matrix, rhs)
-    # solution = solve(problem, SimpleGMRES())
+    problem = LinearProblem(matrix, rhs)
+    solution = solve(problem, SimpleGMRES())
     println("Matrix rank = ", rank(matrix))
-    solution = matrix\rhs
+    # solution = matrix\rhs
     # dψ_dt = solution.u[end-1:end]
     dψ_dt = solution[end-1:end]
-    println("dψ_dt = ", dψ_dt)
-    println("ψ = ", ψ)
     println("-----------------------")
     # dψ_dt = K_matrix\(M_matrix*((K_matrix')\q))
     return dψ_dt
@@ -82,7 +84,7 @@ end
 function filament_oscillator!(dψ_dt::Vector, ψ::Vector, p::NamedTuple, t::Real)
     μ = p.μ
     a = p.a
-    rhs = ψ_dot(ψ, μ, a)
+    rhs = ψ_dot(ψ, μ, a, t)
     dψ_dt[1] = rhs[1]
     dψ_dt[2] = rhs[2]
     return nothing
@@ -91,7 +93,7 @@ end
 function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
     t_span = (0.0, final_time)
     problem = ODEProblem(filament_oscillator!, [π, 0.0], t_span, p)
-    solution = solve(problem, Midpoint(), dt=final_time/num_steps)
+    solution = solve(problem, RK4(), dt=final_time/num_steps)
     return solution
 end
 
@@ -127,6 +129,6 @@ end
 
 p = (a=a, μ=μ)
 
-solution = run_filament(p, T, 1000)
-# plot_solution(solution)
-plot_trajectory(solution)
+solution = run_filament(p, 3*T, 10000)
+plot_solution(solution)
+# plot_trajectory(solution)

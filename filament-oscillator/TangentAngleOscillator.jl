@@ -9,7 +9,7 @@ nodes, weights = gausslegendre(order)
 T = 60.
 L = 19.
 θ_0 = π/2.1
-f_eff = 0.3
+f_eff = 0.0
 f_ψ = 0.85
 f_w = 0.4
 orientation = π/2.0
@@ -21,12 +21,8 @@ c = (L + w)/T_rec
 
 function θ_bend(s::Real, ψ_1::Real)
     k = ψ_1 ÷ (2.0*π)
-    if mod(ψ_1, 2π) < f_eff*2.0*π
-        return (2*k - 2)*θ_0*f_ψ
-    else
-        t = mod(ψ_1, 2π)*T/(2.0*π) - T_eff
-        return (2*k - 1)*θ_0*f_ψ - θ_0*f_ψ*g((s - c*t)/w + 0.5)
-    end
+    t = mod(ψ_1, 2π)*T/(2.0*π)
+    return (2*k + 1)*θ_0*f_ψ - θ_0*f_ψ*g((s - c*t)/w + 0.5)
 end
 
 function g(u::Real)
@@ -87,12 +83,12 @@ end
 
 function dθ_bend_dψ_1(s::Real, ψ_1::Real)
     k = ψ_1 ÷ (2.0*π)
-    if mod(ψ_1, 2.0*π) < f_eff*2.0*π
-        return 0.0
-    else
-        t = mod(ψ_1, 2π)*T/(2.0*π) - T_eff
-        return -(k - 1)*θ_0*f_ψ*dg_dx((s - c*t)/w + 0.5)*c*T/(2.0*π*w)
-    end
+    # if mod(ψ_1, 2.0*π) < f_eff*2.0*π
+    #     return 2*θ_0*f_ψ
+    # else
+    t = mod(ψ_1, 2π)*T/(2.0*π) - T_eff
+    return θ_0*f_ψ*dg_dx((s - c*t)/w + 0.5)*c*T/(2.0*π*w)
+    # end
 end
 
 function dg_dx(u::Real)
@@ -111,24 +107,29 @@ function dξ_dψ_1(s::Real, ψ_1::Real)
     function z_integrand(s::Real)
         return nor_z(s)*dθ_bend_dψ_1(s, ψ_1)
     end
-    x_position = ∫(0.0, s, x_integrand, "trapezoidal")
-    z_position = ∫(0.0, s, z_integrand, "trapezoidal")
+    # if s < eps()
+    #     method = "trapezoidal"
+    # else
+    #     method = "gauss"
+    # end
+    method = "trapezoidal"
+    x_position = ∫(0.0, s, x_integrand, method)
+    z_position = ∫(0.0, s, z_integrand, method)
     return [x_position, 0.0, z_position]
 end
 
-# p = plot(title="θ_bend")
-# # for s ∈ range(0.0, L, 1)
-# s = L/2
-# θ_arr = θ_bend.(s, 0:0.1:10*2π)
-# ψ_arr = collect(0:0.1:10*2π)
-# plot!(p, ψ_arr, θ_arr, label="s = $s")
-# # end
-# display(p)
-
-p = plot(title="θ_bend in s")
-for ψ_1 ∈ range(0.0, 2*pi, 10)
-    θ_arr = θ_bend.(collect(range(0.0, L, 100)), ψ_1)
-    plot!(p, collect(range(0.0, L, 100)), θ_arr, label="ψ_1 = $ψ_1")
+p = plot(title="θ_bend")
+for s ∈ range(0.0, L, 100)
+    # s = L/2
+    θ_arr = θ_bend.(s, 0:0.1:4π)
+    ψ_arr = collect(0:0.1:4π)
+    plot!(p, ψ_arr, θ_arr, label="")
 end
+
+# p = plot(title="θ_bend in s")
+# for ψ_1 ∈ range(π, 3.839026222686727, 10)
+#     θ_arr = θ_bend.(collect(range(0.0, L, 100)), ψ_1)
+#     plot!(p, collect(range(0.0, L, 100)), θ_arr, label="ψ_1 = $ψ_1")
+# end
 
 display(p)
