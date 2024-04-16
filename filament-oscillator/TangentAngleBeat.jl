@@ -9,6 +9,7 @@ T = 60.
 L = 19.
 θ_0 = π/2.1
 f_eff = 0.3
+f_rec = 1.0 - f_eff
 f_ψ = 0.85
 f_w = 0.4
 orientation = π/2.0
@@ -33,6 +34,19 @@ function g(u::Real)
         ) - 1.0
     else
         return 1.0
+    end
+end
+
+"""
+    dg_dx(u::Real)
+
+Returns the derivative of the transition function `g` at argument `u`.
+"""
+function dg_dx(u::Real)
+    if u ≤ -0.5 || u ≥ 0.5
+        return 0.0
+    else
+        return 4.0*(4.0*u^2 + 1.0)*sech(4.0*u/(4.0*u^2 - 1.0))^2/((1.0 - 4.0*u^2)^2)
     end
 end
 
@@ -137,13 +151,13 @@ Returns the position of the filament at arglenth `s` and phase `ψ`.
 """
 function ξ(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return cos(θ(σ, ψ[1]) + ψ[2]*s/L)
+        return cos(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)
     end
     function z_integrand(σ::Real)
-        return sin(θ(σ, ψ[1]) + ψ[2]*s/L)
+        return sin(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)
     end
-    x = ∫(0.0, s, x_integrand, "gausslegendre")
-    z = ∫(0.0, s, z_integrand, "gausslegendre")
+    x = ∫(0.0, s, x_integrand, "trapezoidal")
+    z = ∫(0.0, s, z_integrand, "trapezoidal")
     return [x, 0.0, z]
 end
 
@@ -155,13 +169,13 @@ respect to `ψ_1`.
 """
 function ∂ξ_∂ψ_1(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L)*∂θ_∂ψ_1(σ, ψ[1])
+        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*∂θ_∂ψ_1(σ, ψ[1])
     end
     function z_integrand(σ::Real)
-        return cos(θ(σ, ψ[1]) + ψ[2]*s/L)*∂θ_∂ψ_1(σ, ψ[1])
+        return cos(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*∂θ_∂ψ_1(σ, ψ[1])
     end
-    x = ∫(0.0, s, x_integrand, "gausslegendre")
-    z = ∫(0.0, s, z_integrand, "gausslegendre")
+    x = ∫(0.0, s, x_integrand, "trapezoidal")
+    z = ∫(0.0, s, z_integrand, "trapezoidal")
     return [x, 0.0, z]
 end
 
@@ -173,12 +187,12 @@ respect to `ψ_2`.
 """
 function ∂ξ_∂ψ_2(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L)*s/L
+        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*s/L
     end
     function z_integrand(σ::Real)
-        return cos(θ(σ, ψ[1]) + ψ[2]*s/L)*s/L
+        return cos(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*s/L
     end 
-    x = ∫(0.0, s, x_integrand, "gausslegendre")
-    z = ∫(0.0, s, z_integrand, "gausslegendre")
+    x = ∫(0.0, s, x_integrand, "trapezoidal")
+    z = ∫(0.0, s, z_integrand, "trapezoidal")
     return [x, 0.0, z]
 end
