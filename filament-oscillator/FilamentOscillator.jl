@@ -4,36 +4,42 @@ using DifferentialEquations
 using Plots
 
 
-include("TangentAngleOscillator.jl")
+include("TangentAngleBeat.jl")
 include("../stokes/GreensFunctions.jl")
 
 μ = 1.0
 a = 7e-2
 
-N = 5
+N = 4
 h = L/(N - 1)
 s = [(i)*h for i=1:N]
 
-function R(ψ_2::Real)
-    return [cos(ψ_2) 0. -sin(ψ_2); 0. 1. 0.; sin(ψ_2) 0. cos(ψ_2)]
-end
+"""
+    K(s::Real, ψ::Vector)
 
-function x(s::Real, ψ::Vector)
-    return R(ψ[2])*ξ(s, ψ[1])
-end
-
-function dR_dψ_2(ψ_2::Real)
-    return [-sin(ψ_2) 0. -cos(ψ_2); 0. 1. 0.; cos(ψ_2) 0. -sin(ψ_2)]
-end
-
+Returns the matrix that maps the phase velocity to the filament velocity at arclength `s`
+and phase `ψ`.
+"""
 function K(s::Real, ψ::Vector)
-    return [R(ψ[2])*dξ_dψ_1(s, ψ[1]) dR_dψ_2(ψ[2])*ξ(s, ψ[1])]
+    return [∂ξ_∂ψ_1(s, ψ) ∂ξ_∂ψ_2(s, ψ)]
 end
 
+"""
+    Kₕ(ψ::Vector)
+
+Returns the matrix that maps the phase velocity to the discretised filament velocity at
+phase `ψ`.
+"""
 function Kₕ(ψ::Vector)
     return cat([K(s[i], ψ) for i = 1:N]..., dims=1)
 end
 
+"""
+    Mₕ(ψ::Vector, μ::Real, a::Real)
+
+Returns the regularised Stokes mobility matrix mapping forces in the discretised filament
+to velocities at phase `ψ`, in a fluid with viscosity `μ`, where the filament was discretised using spheres of radius `a`.
+"""
 function Mₕ(ψ::Vector, μ::Real, a::Real)
     mobility = zeros(3*N, 3*N)
     for i = 1:N
@@ -41,43 +47,38 @@ function Mₕ(ψ::Vector, μ::Real, a::Real)
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             mobility[α:(α + 2), β:(β + 2)] .= rotne_prager_blake_tensor(
-                    x(s[i], ψ), x(s[j], ψ), μ, a
+                    ξ(s[i], ψ), ξ(s[j], ψ), μ, a
                 )
         end
     end
     return mobility
 end
 
-function ω(ψ::Vector, t::Real)
-    if t < f_eff*T
-        return [0.0, -θ_0*sin(π*t/T_eff)*π/T_eff]
-    else
-        return [2.0*π/T, θ_0*(1 - f_ψ)*cos(π*t/T_rec - π/2.0)*π/T_rec]
-    end
+"""
+    q_ref(ψ::Vector, μ::Real, a::Real, t::Real)
+
+Returns the generalised force vector that induces a reference beat in a single filament.
+"""
+function q_ref(ψ::Vector, μ::Real, a::Real)
+    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*[2π/T, 0.0])
 end
 
-function q_ref(ψ::Vector, μ::Real, a::Real, t::Real)
-    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*ω(ψ, t))
-end
+"""
+    ψ_dot(ψ::Vector, μ::Real, a::Real, κ::Real, t::Real)
 
-function ψ_dot(ψ::Vector, μ::Real, a::Real, t::Real)
-    q = q_ref(ψ, μ, a, t)
+Returns the phase velocity at a given phase `ψ`, in a fluid with viscosity `μ`, where the
+filament was discretised using spheres of radius `a`, and the filament has generalised
+bending stiffness `κ`. The phase velocity is determined by solving the saddle-point system
+that serves as the equation of motion for the filament.
+"""
+function ψ_dot(ψ::Vector, μ::Real, a::Real, κ::Real)
+    q = q_ref(ψ, μ, a) .- [0.0, -κ*ψ[2]]
     K_matrix = Kₕ(ψ)
     matrix = [Mₕ(ψ, μ, a) -K_matrix; -K_matrix' zeros(2, 2)]
-    println("M rank = ", rank(Mₕ(ψ, μ, a)))
-    println("K rank = ", rank(K_matrix))
-    display(cat([dθ_bend_dψ_1(s[i], ψ[1]) for i = 1:N]..., dims=1))
-    println("ψ = ", ψ)
-    # M_matrix = Mₕ(ψ, μ, a)
     rhs = vcat(zeros(3*N), -q)
     problem = LinearProblem(matrix, rhs)
     solution = solve(problem, SimpleGMRES())
-    println("Matrix rank = ", rank(matrix))
-    # solution = matrix\rhs
-    # dψ_dt = solution.u[end-1:end]
     dψ_dt = solution[end-1:end]
-    println("-----------------------")
-    # dψ_dt = K_matrix\(M_matrix*((K_matrix')\q))
     return dψ_dt
 end
 
@@ -92,26 +93,24 @@ end
 
 function run_filament(p::NamedTuple, final_time::Real, num_steps::Int)
     t_span = (0.0, final_time)
-    problem = ODEProblem(filament_oscillator!, [π, 0.0], t_span, p)
-    solution = solve(problem, RK4(), dt=final_time/num_steps)
+    problem = ODEProblem(filament_oscillator!, [2π, 0.0], t_span, p)
+    solution = solve(problem, AB4(), dt=final_time/num_steps)
     return solution
 end
 
 function plot_solution(solution::ODESolution)
-    ψ_array = solution.u
+    ψ_array = stack(solution.u, dims=1)[begin:500:end, :]
     p = plot(
         xlim=(-L+1.0, L+1.0), ylim=(-L/2., L+1.0), title="Filament movement",
         xaxis="x [μm]", yaxis="z [μm]", legend=false
     )
     color_scheme = palette(:twilight, size(ψ_array)[1], rev=true)
-    i = 1
-    for (i, ψ) in enumerate(ψ_array)
+    for (i, ψ) in enumerate(ψ_array[:, 1])
         positions = zeros(N+1, 3)
         for j=1:N
-            positions[j+1, :] += x(s[j], ψ)
+            positions[j, :] += ξ(s[j], ψ_array[i, :])
         end
         plot!(positions[:, 1], positions[:, 3], color=color_scheme[i])
-        i += 1
     end
     display(p)
     return nothing
@@ -129,6 +128,6 @@ end
 
 p = (a=a, μ=μ)
 
-solution = run_filament(p, 3*T, 10000)
-plot_solution(solution)
-# plot_trajectory(solution)
+solution = run_filament(p, 45, 10_000)
+# plot_solution(solution)
+plot_trajectory(solution)
