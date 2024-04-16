@@ -137,10 +137,10 @@ Returns the position of the filament at arglenth `s` and phase `ψ`.
 """
 function ξ(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return cos(θ_bend(σ, ψ[1]) + ψ[2]*s/L)
+        return cos(θ(σ, ψ[1]) + ψ[2]*s/L)
     end
     function z_integrand(σ::Real)
-        return sin(θ_bend(σ, ψ[1]) + ψ[2]*s/L)
+        return sin(θ(σ, ψ[1]) + ψ[2]*s/L)
     end
     x = ∫(0.0, s, x_integrand, "gausslegendre")
     z = ∫(0.0, s, z_integrand, "gausslegendre")
@@ -155,10 +155,10 @@ respect to `ψ_1`.
 """
 function ∂ξ_∂ψ_1(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return -sin(θ_bend(σ, ψ[1]) + ψ[2]*s/L)*∂θ_∂ψ_1(σ, ψ[1])
+        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L)*∂θ_∂ψ_1(σ, ψ[1])
     end
     function z_integrand(σ::Real)
-        return cos(θ_bend(σ, ψ[1]) + ψ[2]*s/L)*∂θ_∂ψ_1(σ, ψ[1])
+        return cos(θ(σ, ψ[1]) + ψ[2]*s/L)*∂θ_∂ψ_1(σ, ψ[1])
     end
     x = ∫(0.0, s, x_integrand, "gausslegendre")
     z = ∫(0.0, s, z_integrand, "gausslegendre")
@@ -173,10 +173,10 @@ respect to `ψ_2`.
 """
 function ∂ξ_∂ψ_2(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return -sin(θ_bend(σ, ψ[1]) + ψ[2]*s/L)*s/L
+        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L)*s/L
     end
     function z_integrand(σ::Real)
-        return cos(θ_bend(σ, ψ[1]) + ψ[2]*s/L)*s/L
+        return cos(θ(σ, ψ[1]) + ψ[2]*s/L)*s/L
     end 
     x = ∫(0.0, s, x_integrand, "gausslegendre")
     z = ∫(0.0, s, z_integrand, "gausslegendre")
