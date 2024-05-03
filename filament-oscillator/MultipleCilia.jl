@@ -1,0 +1,186 @@
+using LinearAlgebra
+using LinearSolve
+using DifferentialEquations
+using Plots
+using Base.Threads
+
+
+include("FilamentOscillator.jl")
+include("../stokes/GreensFunctions.jl")
+
+
+M = 2
+# φ = 12.5*π/180.0
+φ = 0.0
+A = [cos(φ) -sin(φ) 0.0; sin(φ) cos(φ) 0.0; 0.0 0.0 1.0]
+d = 40.0
+
+N = 5
+h = L/(N - 1)
+s = [(i)*h for i=1:N]
+x₀ = [[(j - 1)*d, 0.0, 0.0] for j=1:M]
+
+"""
+    x(Ψ::Vector)
+
+Returns the stacked positions of the discretised filaments at phase `Ψ`. It is an NM x 3
+size matrix with the positions of the `j`th filament at the `i`th discretisation point
+given by `x(Ψ)[i + (j - 1)N, :]`.
+"""
+function x(Ψ::Vector)
+    result = zeros(N*M, 3)
+    @threads for idx=1:M*N
+        j = ceil(Int, idx / N)
+        i = idx - (j - 1)*N
+        result[idx, :] .= A*ξ(s[i], Ψ[2j - 1:2j]) + x₀[j]
+    end
+    return result
+end
+
+"""
+    Ψ_dot(Ψ::Vector, μ::Real, a::Real, κ_b::Real)
+
+Returns the phase velocity at a given system phase `Ψ`, in a fluid with viscosity `mu`,
+where all filaments were discretised using spheres of radius `a`, and they share bending
+stiffness `κ_b`. The phase velocity is determined by solving the saddle-point system that
+serves as the equation of motion for the system of filaments.
+"""
+function Ψ_dot(Ψ::Vector, μ::Real, a::Real, κ_b::Real)
+    Q = Q_ref(Ψ, μ, a, κ_b)
+    κ_matrix = κₕ(Ψ)
+    matrix = [Πₕ(Ψ, μ, a) -κ_matrix; -κ_matrix' zeros(2M, 2M)]
+    rhs = vcat(zeros(M*3N), -Q)
+    problem = LinearProblem(matrix, rhs)
+    solution = solve(problem, KrylovJL_GMRES())
+    dΨ_dt = solution[end-(2*M - 1):end]
+    return dΨ_dt
+end
+
+"""
+    block_diagonal(matrices::Array{Matrix})
+
+Given an array of equally-sized matrices, returns a block-diagonal matrix with the
+matrices of the array on the diagonal.
+"""
+function block_diagonal(matrices::Vector)
+    example = matrices[1]
+    rows, columns = size(example)
+    n = length(matrices)
+    result = zeros(rows*n, columns*n)
+    for i = 1:n
+        result[1 + (i - 1)*rows:i*rows, 1 + (i - 1)*columns:i*columns] .= matrices[i]
+    end
+    return result
+end
+
+"""
+    κₕ(Ψ::Vector)
+
+Returns the block-diagonal matrix that maps the phase velocity to the discretised filament
+system velocity at phase `Ψ`.
+"""
+function κₕ(Ψ::Vector)
+    return block_diagonal([Kₕ(Ψ[2j - 1:2j]) for j=1:M])
+end
+
+"""
+    Πₕ(Ψ::Vector, μ::Real, a::Real)
+
+Returns the block-diagonal regularised Stokes mobility matrix mapping forces in the
+discretised filament system to velocities at phase `Ψ`, in a fluid with viscosity `μ`,
+where the filaments were discretised using spheres of radius `a`.
+"""
+function Πₕ(Ψ::Vector, μ::Real, a::Real)
+    mobility = zeros(3*N*M, 3*N*M)
+    x_vector = x(Ψ)
+    @threads for i = 1:N*M
+        @threads for j = 1:N*M
+            α = 1 + 3*(i - 1)
+            β = 1 + 3*(j - 1)
+            tensor = rotne_prager_blake_tensor(x_vector[i, :], x_vector[j, :], μ, a)
+            if any(isnan, x_vector)
+                @warn "NaN detected in x_vector"
+            end    
+            if any(isnan, tensor)
+                @warn "NaN detected in rotne_prager_blake_tensor at i=$i, j=$j"
+            end
+            mobility[α:(α + 2), β:(β + 2)] .= tensor
+        end
+    end
+    return mobility
+end
+
+"""
+    Q_ref(Ψ::Vector, μ::Real, a::Real, κ_b::Real)
+
+Returns the generalised force vector of forcings that, in absence of other cilia, induce a
+reference beat in each filament. It includes the elastic relaxation.
+"""
+function Q_ref(Ψ::Vector, μ::Real, a::Real, κ_b::Real)
+    return cat([q_ref(Ψ[2j-1:2j], μ, a) .- [0.0, -κ_b*Ψ[2j]] for j=1:M]..., dims=1)
+end
+
+"""
+    filament_oscillators!(dΨ_dt::Vector, Ψ::Vector, p::NamedTuple, t::Real)
+
+Updates the phase velocities `dΨ_dt` given the current phase `Ψ` and the parameters `p`.
+"""
+function filament_oscillators!(dΨ_dt::Vector, Ψ::Vector, p::NamedTuple, t::Real)
+    μ = p.μ
+    a = p.a
+    κ_b = p.κ_b
+    rhs = Ψ_dot(Ψ, μ, a, κ_b)
+    dΨ_dt .= rhs
+    return nothing
+end
+
+"""
+    run_system(p::NamedTuple, final_time::Real, num_steps::Int)
+
+Runs the system of filaments with parameters `p` for `final_time` seconds, using `num_steps` timesteps with 4th order Adams-Bashforth.
+"""
+function run_system(p::NamedTuple, final_time::Real, num_steps::Int)
+    t_span = (0.0, final_time)
+    Ψ₀ = repeat([1.0, 0.0]; outer=[M])
+    problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
+    solution = solve(problem, ImplicitEuler(autodiff=false))#, dt=final_time/num_steps)
+    return solution
+end
+
+function plot_system(solution::ODESolution)
+    Ψ_array = stack(solution.u, dims=1)[begin:size(solution.u)[1]÷100 + 1:end, :]
+    p = plot(
+        xlim=(-L*1.1, L*1.1), ylim=(0.0, L*1.1), title="System movement",
+        xaxis="x [μm]", yaxis="z [μm]", legend=false
+    )
+    xlims!(p, (-L*1.1, (M - 1)*d + L*1.1))
+    color_scheme = palette(:twilight, size(Ψ_array)[1], rev=true)
+    @gif for k = 1:size(Ψ_array)[1]
+        x_vector = x(Ψ_array[k, :])
+        for j=1:M
+            positions = zeros(N+1, 3)
+            positions[1, :] = x₀[j]
+                for i=1:N
+                positions[i+1, :] += x_vector[i + (j - 1)N, :]
+            end
+            plot!(p, positions[:, 1], positions[:, 3], color=color_scheme[k])
+        end
+    end
+    display(p)
+    return nothing
+end
+
+function plot_system_trajectory(solution::ODESolution)
+    Ψ_array = stack(solution.u, dims=1)
+    t = solution.t
+    p = plot(title="Phase evolution", xaxis="t [ms]")
+    for i=1:size(Ψ_array)[2]
+        plot!(t, Ψ_array[:, i], label="ψ_$i")
+    end
+    display(p)
+    return nothing
+end
+
+p = (a=a, μ=μ, κ_b=1.0)
+solution = run_system(p, 2T, 500)
+# plot_system_trajectory(solution)
