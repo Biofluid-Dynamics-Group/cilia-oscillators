@@ -42,8 +42,8 @@ to velocities at phase `ψ`, in a fluid with viscosity `μ`, where the filament 
 """
 function Mₕ(ψ::Vector, μ::Real, a::Real)
     mobility = zeros(3*N, 3*N)
-    for i = 1:N
-        for j = 1:N
+    @threads for i = 1:N
+        @threads for j = 1:N
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             mobility[α:(α + 2), β:(β + 2)] .= rotne_prager_blake_tensor(
@@ -60,7 +60,8 @@ end
 Returns the generalised force vector that induces a reference beat in a single filament.
 """
 function q_ref(ψ::Vector, μ::Real, a::Real)
-    return Kₕ(ψ)'*(Mₕ(ψ, μ, a)\Kₕ(ψ)*[2π/T, 0.0])
+    K = Kₕ(ψ)
+    return K'*(Mₕ(ψ, μ, a)\K*[2π/T, 0.0])
 end
 
 """
@@ -77,7 +78,7 @@ function ψ_dot(ψ::Vector, μ::Real, a::Real, κ_b::Real)
     matrix = [Mₕ(ψ, μ, a) -K_matrix; -K_matrix' zeros(2, 2)]
     rhs = vcat(zeros(3*N), -q)
     problem = LinearProblem(matrix, rhs)
-    solution = solve(problem, SimpleGMRES())
+    solution = solve(problem, KrylovJL_GMRES())
     dψ_dt = solution[end-1:end]
     return dψ_dt
 end
@@ -117,13 +118,13 @@ end
 Given an ODESolution `solution` of the filament oscillator, plots the filament's movement.
 """
 function plot_solution(solution::ODESolution)
-    ψ_array = stack(solution.u, dims=1)
+    ψ_array = stack(solution.u, dims=1)[begin:size(solution.u)[1]÷100:end, :]
     p = plot(
         xlim=(-L*1.1, L*1.1), ylim=(0.0, L*1.1), title="Filament movement",
         xaxis="x [μm]", yaxis="z [μm]", legend=false
     )
     color_scheme = palette(:twilight, size(ψ_array)[1], rev=true)
-    for (i, ψ) in enumerate(ψ_array[:, 1])
+    @gif for (i, ψ) in enumerate(ψ_array[:, 1])
         positions = zeros(N+1, 3)
         for j=1:N
             positions[j+1, :] += ξ(s[j], ψ_array[i, :])
@@ -148,3 +149,7 @@ function plot_trajectory(solution::ODESolution)
     display(p)
     return nothing
 end
+
+# p = (μ=μ, a=a, κ_b=1.0)
+# solution = run_filament(p, T, 100)
+# plot_solution(solution)
