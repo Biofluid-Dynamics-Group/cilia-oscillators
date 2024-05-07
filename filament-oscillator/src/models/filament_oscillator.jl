@@ -4,8 +4,8 @@ using DifferentialEquations
 using Plots
 
 
-include("TangentAngleBeat.jl")
-include("../stokes/GreensFunctions.jl")
+include("../beats/tangent_angle.jl")
+include("../utils/greens_functions.jl")
 
 μ = 1.0
 a = 7e-2
