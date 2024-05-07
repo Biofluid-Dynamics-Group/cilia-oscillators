@@ -18,12 +18,14 @@ function Ψ_dot(system::CiliaSystem, fluid::FluidParameters)
         Πₕ(system, fluid) -κ_matrix;
         -κ_matrix' zeros(2system.params.M, 2system.params.M)
     ]
-    elastic_relaxation = repeat([0.0, system.κ_b*system.Ψ[2j]]; outer=[system.params.M])
+    elastic_relaxation = cat(
+        [[0.0, system.params.κ_b*system.Ψ[2j]] for j=1:system.params.M]..., dims=1
+    )
     force = Q + elastic_relaxation
-    rhs = vcat(zeros(system.M*3system.N), -force)
+    rhs = vcat(zeros(system.params.M*3system.params.N), -force)
     problem = LinearProblem(matrix, rhs)
     solution = solve(problem, KrylovJL_GMRES())
-    dΨ_dt = solution[end-(2*system.M - 1):end]
+    dΨ_dt = solution[end-(2*system.params.M - 1):end]
     return dΨ_dt
 end
 
@@ -56,6 +58,6 @@ function run_system(system::CiliaSystem, fluid::FluidParameters, time::Real, alg
     Ψ₀ = copy(system.Ψ)
     p = (system=system, fluid=fluid)
     problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
-    solution = solve(problem, alg)
+    solution = solve(problem, alg=alg)
     return solution
 end
