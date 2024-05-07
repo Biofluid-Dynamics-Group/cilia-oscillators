@@ -23,7 +23,7 @@ struct CiliaSystem
     x₀::Vector{Vector{Real}}  # Basal positions of cilia
     s::Vector{Real}  # Arclength position of discretisation spheres
     A::Matrix{Real}  # Beat plane rotation matrix
-    Ψ::Vector{Real}  # System phase
+    Ψ::Vector{Float64}  # System phase
 end
 
 """
