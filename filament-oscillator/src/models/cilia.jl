@@ -3,6 +3,7 @@ using LinearAlgebra
 
 include("../beats/tangent_angle.jl")
 include("../utils/greens_functions.jl")
+include("../utils/algebra.jl")
 
 
 struct FluidParameters
@@ -66,7 +67,7 @@ function κₕ(system::CiliaSystem)
     # Initialise array to hold the Kₕ matrices for each cilium
     K_h_matrix_array = zeros(system.params.M, 3system.params.N, 2)
     # Populate the array. Cilia are geometrically independent, so threads can be used
-    @threads for j=1:system.M
+    @threads for j=1:system.params.M
         # Each matrix is the stacking of the individual K matrices along the cilium length
         K_h_matrix_array[j, :, :] .= Kₕ(j, system)
     end
@@ -89,7 +90,7 @@ function Πₕ(system::CiliaSystem, fluid::FluidParameters)
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             tensor = rotne_prager_blake_tensor(
-                x_vector[i, :], x_vector[j, :], fluid.μ, system.a
+                x_vector[i, :], x_vector[j, :], fluid.μ, system.params.a
             )
             mobility[α:(α + 2), β:(β + 2)] .= tensor
         end
@@ -130,6 +131,7 @@ function Q_ref(system::CiliaSystem, fluid::FluidParameters)
     # independently
     @threads for j=1:system.params.M
         K_h_matrix = Kₕ(j, system)
+        K_h_matrix = convert(Matrix{Float64}, K_h_matrix)
         forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[2π, 0.0])
     end
     return forcings
