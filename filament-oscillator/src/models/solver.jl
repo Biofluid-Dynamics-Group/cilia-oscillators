@@ -1,6 +1,5 @@
 using LinearSolve
 using DifferentialEquations
-using ODEInterfaceDiffEq
 
 include("cilia.jl")
 
