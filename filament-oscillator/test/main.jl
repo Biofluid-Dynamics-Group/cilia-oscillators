@@ -11,9 +11,9 @@ a = 7e-2  # μm, sphere radius
 κ_b = 1.0  # pN μm^2, bending stiffness
 
 # Geometric setup
-M = 1  # Number of cilia
+M = 2  # Number of cilia
 d = 40.0  # μm, distance between cilia
-φ = 12.5*π/180.0  # rad, angle of cilia beat plane
+φ = 0.0 # 12.5*π/180.0  # rad, angle of cilia beat plane
 
 # Discretisation parameters
 N = 5  # Number of discretisation spheres per cilium
@@ -23,7 +23,7 @@ N = 5  # Number of discretisation spheres per cilium
 
 # Simulation parameters
 num_periods = 1
-alg = radau()
+alg = Midpoint()
 
 # Instance objects
 h = L/(N - 1)
