@@ -2,22 +2,22 @@ using LinearAlgebra
 using FastGaussQuadrature
 
 
-order = 10  # Quadrature order
+const order = 10  # Quadrature order
 nodes, weights = gausslegendre(order)
 
-T = 60.
-L = 19.
-θ_0 = π/2.1
-f_eff = 0.3
-f_rec = 1.0 - f_eff
-f_ψ = 0.85
-f_w = 0.4
-orientation = π/2.0
+const T = 60.
+const L = 19.
+const θ_0 = π/2.1
+const f_eff = 0.3
+const f_rec = 1.0 - f_eff
+const f_ψ = 0.85
+const f_w = 0.4
+const orientation = π/2.0
 
-T_eff = T*f_eff
-T_rec = T - T_eff
-w = f_w*L
-c = (L + w)/T_rec
+const T_eff = T*f_eff
+const T_rec = T - T_eff
+const w = f_w*L
+const c = (L + w)/T_rec
 
 
 """
@@ -195,4 +195,14 @@ function ∂ξ_∂ψ_2(s::Real, ψ::Vector)
     x = ∫(0.0, s, x_integrand, "trapezoidal")
     z = ∫(0.0, s, z_integrand, "trapezoidal")
     return [x, 0.0, z]
+end
+
+"""
+    K(s::Real, ψ::Vector)
+
+Returns the matrix that maps the phase velocity to the filament velocity at arclength `s`
+and phase `ψ` in the reference beat plane.
+"""
+function K(s::Real, ψ::Vector)
+    return [∂ξ_∂ψ_1(s, ψ) ∂ξ_∂ψ_2(s, ψ)]
 end
