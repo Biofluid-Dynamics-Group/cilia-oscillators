@@ -18,3 +18,13 @@ function block_diagonal(matrices::Vector)
     end
     return result
 end
+function block_diagonal(matrices::Array{Float64, 3})
+    example = matrices[1, :, :]
+    rows, columns = size(example)
+    n = size(matrices)[1]
+    result = zeros(rows*n, columns*n)
+    @threads for i = 1:n
+        result[1 + (i - 1)*rows:i*rows, 1 + (i - 1)*columns:i*columns] .= matrices[i, :, :]
+    end
+    return result
+end
