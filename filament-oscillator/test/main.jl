@@ -1,5 +1,8 @@
+using DifferentialEquations
+using ODEInterfaceDiffEq
+
 include("../src/models/cilia.jl")
-include("../src/visualisation/plotters.jl")
+include("../src/models/solver.jl")
 
 
 # Physical parameters
@@ -24,12 +27,16 @@ alg = radau()
 
 # Instance objects
 h = L/(N - 1)
+params = CiliaParameters(M, N, φ, d, a, κ_b)
+x₀ = [[(j - 1)*d, 0.0, 0.0] for j=1:M]
+s = [(i)*h for i=1:N]
+A = [cos(φ) -sin(φ) 0.0; sin(φ) cos(φ) 0.0; 0.0 0.0 1.0]
 system = CiliaSystem(
-    params = CiliaParameters(M, N, φ, d, a, κ_b),
-    x₀ = [[(j - 1)*d, 0.0, 0.0] for j=1:M],
-    s = [(i)*h for i=1:N]
-    A = [cos(φ) -sin(φ) 0.0; sin(φ) cos(φ) 0.0; 0.0 0.0 1.0],
-    Ψ = Ψ₀
+    params,
+    x₀,
+    s,
+    A,
+    Ψ₀
 )
 fluid = FluidParameters(μ)
 
