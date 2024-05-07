@@ -1,12 +1,13 @@
 using LinearAlgebra
 using LinearSolve
 using DifferentialEquations
+using ODEInterfaceDiffEq
 using Plots
 using Base.Threads
 
 
-include("FilamentOscillator.jl")
-include("../stokes/GreensFunctions.jl")
+include("filament_oscillator.jl")
+include("../utils/greens_functions.jl")
 
 
 M = 2
@@ -111,13 +112,28 @@ function Πₕ(Ψ::Vector, μ::Real, a::Real)
 end
 
 """
+    Kₕ(ψ::Vector)
+
+Returns the matrix that maps the phase velocity to the discretised filament velocity at
+phase `ψ`.
+"""
+function Kₕ(ψ::Vector)
+    return cat([A*K(s[i], ψ) for i = 1:N]..., dims=1)
+end
+
+"""
     Q_ref(Ψ::Vector, μ::Real, a::Real, κ_b::Real)
 
 Returns the generalised force vector of forcings that, in absence of other cilia, induce a
 reference beat in each filament. It includes the elastic relaxation.
 """
 function Q_ref(Ψ::Vector, μ::Real, a::Real, κ_b::Real)
-    return cat([q_ref(Ψ[2j-1:2j], μ, a) .- [0.0, -κ_b*Ψ[2j]] for j=1:M]..., dims=1)
+    function q_ref_indexed(j::Int)
+        K = Kₕ(Ψ[2j - 1:2j])
+        M = Mₕ(Ψ[2j - 1:2j], μ, a)
+        return K'*(M\(K*[2π/T, 0.0])) .- [0.0, -κ_b*Ψ[2j]]
+    end
+    return cat([q_ref_indexed(j) for j=1:M]..., dims=1)
 end
 
 """
@@ -139,11 +155,11 @@ end
 
 Runs the system of filaments with parameters `p` for `final_time` seconds, using `num_steps` timesteps with 4th order Adams-Bashforth.
 """
-function run_system(p::NamedTuple, final_time::Real, num_steps::Int)
+function run_system(p::NamedTuple, final_time::Real, num_steps::Int, alg)
     t_span = (0.0, final_time)
     Ψ₀ = repeat([1.0, 0.0]; outer=[M])
     problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
-    solution = solve(problem, ImplicitEuler(autodiff=false))#, dt=final_time/num_steps)
+    solution = solve(problem, alg)#, dt=final_time/num_steps)
     return solution
 end
 
@@ -180,7 +196,3 @@ function plot_system_trajectory(solution::ODESolution)
     display(p)
     return nothing
 end
-
-p = (a=a, μ=μ, κ_b=1.0)
-solution = run_system(p, 2T, 500)
-# plot_system_trajectory(solution)
