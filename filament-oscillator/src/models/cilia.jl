@@ -28,7 +28,7 @@ struct CiliaSystem
 end
 
 """
-    x(system::CiliaSystem, params::CiliaParameters)
+    x(system::CiliaSystem)
 
 Returns the stacked positions of the discretised cilia. It is an NM x 3 size matrix
 with the positions of the `j`th cilium at the `i`th discretisation point given by
@@ -53,7 +53,7 @@ Returns the matrix that maps the phase velocity of the `j`th cilium to its veloc
 function Kₕ(j::Int, system::CiliaSystem)
     # Each matrix is the stacking of the individual K matrices along the cilium length
     return cat(
-        [system.A*K(system.s[i], system.Ψ[2j - 1:2j]) for i = 1:params.N]..., dims=1
+        [system.A*K(system.s[i], system.Ψ[2j - 1:2j]) for i = 1:system.params.N]..., dims=1
     )
 end
 
@@ -107,8 +107,8 @@ system to its velocities. Used to calculate independent forcings.
 function Mₕ(j::Int, system::CiliaSystem, fluid::FluidParameters)
     mobility = zeros(3*system.params.N, 3*system.params.N)
     ψ = system.Ψ[2j - 1:2j]  # Specific cilium phase
-    for i = 1:params.N
-        for j = 1:params.N
+    for i = 1:system.params.N
+        for j = 1:system.params.N
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             mobility[α:(α + 2), β:(β + 2)] .= rotne_prager_blake_tensor(
@@ -130,8 +130,7 @@ function Q_ref(system::CiliaSystem, fluid::FluidParameters)
     # For each individual cilium, calculate the forcing that induces a reference beat
     # independently
     @threads for j=1:system.params.M
-        K_h_matrix = Kₕ(j, system)
-        K_h_matrix = convert(Matrix{Float64}, K_h_matrix)
+        K_h_matrix = convert(Matrix{Float64}, Kₕ(j, system))
         forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[2π, 0.0])
     end
     return forcings
