@@ -53,11 +53,17 @@ end
 Given a system of cilia in its current state, advance the system for `time` milliseconds
 using the algorithm `arg` for time integration.
 """
-function run_system(system::CiliaSystem, fluid::FluidParameters, time::Real, alg)
+function run_system(
+    system::CiliaSystem, fluid::FluidParameters, time::Real, alg, num_steps::Int=0
+)
     t_span = (0.0, time)
     Ψ₀ = copy(system.Ψ)
     p = (system=system, fluid=fluid)
     problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
-    solution = solve(problem, alg=alg)
+    if num_steps != 0
+        solution = solve(problem, alg=alg, dt=time/num_steps)
+    else
+        solution = solve(problem, alg=alg)
+    end
     return solution
 end
