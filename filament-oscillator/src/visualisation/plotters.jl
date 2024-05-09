@@ -1,25 +1,30 @@
 using DifferentialEquations
 using Plots
 
+include("../beats/tangent_angle.jl")
+include("../models/cilia.jl")	
+
+
 """
     animate_cilia(solution::ODESolution)
 
 Animates the cilia movement given the solution `solution` of the ODE.
 """
-function animate_cilia(solution::ODESolution)
+function animate_cilia(solution::ODESolution, system::CiliaSystem)
     Ψ_array = stack(solution.u, dims=1)[begin:size(solution.u)[1]÷100 + 1:end, :]
     p = plot(
-        xlim=(-L*1.1, L*1.1), ylim=(0.0, L*1.1), title="System movement",
+        ylim=(0.0, L*1.1), title="System movement",
         xaxis="x [μm]", yaxis="z [μm]", legend=false
     )
     xlims!(p, (-L*1.1, (M - 1)*d + L*1.1))
     color_scheme = palette(:twilight, size(Ψ_array)[1], rev=true)
     @gif for k = 1:size(Ψ_array)[1]
-        x_vector = x(Ψ_array[k, :])
-        for j=1:M
+        system.Ψ .= Ψ_array[k, :]
+        x_vector = x(system)
+        for j=1:system.params.M
             positions = zeros(N+1, 3)
-            positions[1, :] = x₀[j]
-                for i=1:N
+            positions[1, :] = system.x₀[j]
+                for i=1:system.params.N
                 positions[i+1, :] += x_vector[i + (j - 1)N, :]
             end
             plot!(p, positions[:, 1], positions[:, 3], color=color_scheme[k])
