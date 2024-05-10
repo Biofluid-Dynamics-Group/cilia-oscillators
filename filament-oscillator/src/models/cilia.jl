@@ -131,7 +131,7 @@ function Q_ref(system::CiliaSystem, fluid::FluidParameters)
     # independently
     @threads for j=1:system.params.M
         K_h_matrix = convert(Matrix{Float64}, Kₕ(j, system))
-        forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[2π, 0.0])
+        forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[2π/T, 0.0])
     end
     return forcings
 end
