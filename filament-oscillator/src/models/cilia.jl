@@ -89,7 +89,7 @@ function Πₕ(system::CiliaSystem, fluid::FluidParameters)
         @threads for j = 1:num_positions
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
-            tensor = rotne_prager_blake_tensor(
+            tensor = RPY_tensor(
                 x_vector[i, :], x_vector[j, :], fluid.μ, system.params.a
             )
             mobility[α:(α + 2), β:(β + 2)] .= tensor
@@ -111,7 +111,7 @@ function Mₕ(j::Int, system::CiliaSystem, fluid::FluidParameters)
         for j = 1:system.params.N
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
-            mobility[α:(α + 2), β:(β + 2)] .= rotne_prager_blake_tensor(
+            mobility[α:(α + 2), β:(β + 2)] .= RPY_tensor(
                     ξ(system.s[i], ψ), ξ(system.s[j], ψ), fluid.μ, system.params.a
                 )
         end
@@ -131,7 +131,8 @@ function Q_ref(system::CiliaSystem, fluid::FluidParameters)
     # independently
     @threads for j=1:system.params.M
         K_h_matrix = convert(Matrix{Float64}, Kₕ(j, system))
-        forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[2π/T, 0.0])
+        forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[ω, 0.0])
+        # println(det(K_h_matrix'*inv(Mₕ(j, system, fluid))K_h_matrix))
     end
     return forcings
 end
