@@ -1,24 +1,11 @@
 using LinearAlgebra
 using FastGaussQuadrature
 
+include("../models/physical_params.jl")
+
 
 const order = 10  # Quadrature order
 nodes, weights = gausslegendre(order)
-
-const T = 60.
-const L = 19.
-const θ_0 = π/2.1
-const f_eff = 0.3
-const f_rec = 1.0 - f_eff
-const f_ψ = 0.85
-const f_w = 0.4
-const orientation = π/2.0
-
-const T_eff = T*f_eff
-const T_rec = T - T_eff
-const w = f_w*L
-const c = (L + w)/T_rec
-
 
 """
     g(u::Real)
@@ -116,10 +103,11 @@ arclength `s` and shape phase `ψ_1`.
 function ∂θ_∂ψ_1(s::Real, ψ_1::Real)
     mod_ψ_1 = mod2pi(ψ_1)
     if mod_ψ_1 < f_eff*2π
-        return ∂θ_eff_∂ψ_1(mod_ψ_1)
+        value = ∂θ_eff_∂ψ_1(mod_ψ_1)
     else
-        return ∂θ_rec_∂ψ_1(s, mod_ψ_1 - f_eff*2π)
+        value = ∂θ_rec_∂ψ_1(s, mod_ψ_1 - f_eff*2π)
     end
+    return value
 end
 
 """
@@ -129,6 +117,10 @@ Returns the derivative of the tangent angle of the filament during the effective
 at shape phase ψ_1.
 """
 function ∂θ_eff_∂ψ_1(ψ_1::Real)
+    value = -θ_0*sin(ψ_1/(2.0*f_eff))/(2.0*f_eff) 
+    if value < eps()
+        println("∂θ/∂ψ₁ = 0")
+    end
    return -θ_0*sin(ψ_1/(2.0*f_eff))/(2.0*f_eff) 
 end
 
@@ -187,10 +179,10 @@ respect to `ψ_2`.
 """
 function ∂ξ_∂ψ_2(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*s/L
+        return -sin(θ(σ, ψ[1]) + ψ[2]*σ/L + orientation)*σ/L
     end
     function z_integrand(σ::Real)
-        return cos(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*s/L
+        return cos(θ(σ, ψ[1]) + ψ[2]*σ/L + orientation)*σ/L
     end 
     x = ∫(0.0, s, x_integrand, "trapezoidal")
     z = ∫(0.0, s, z_integrand, "trapezoidal")
