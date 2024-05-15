@@ -3,27 +3,19 @@ using ODEInterfaceDiffEq
 
 include("../src/models/cilia.jl")
 include("../src/models/solver.jl")
+include("../src/models/physical_params.jl")
 
-
-# Physical parameters
-a = 7e-2  # μm, sphere radius
-μ = 1.0  # Pa s, fluid viscosity
-κ_b = 1.0  # pN μm^2, bending stiffness
-
-# Geometric setup
-M = 2  # Number of cilia
-d = 40.0  # μm, distance between cilia
-φ = 0.0 # 12.5*π/180.0  # rad, angle of cilia beat plane
-
-# Discretisation parameters
-N = 5  # Number of discretisation spheres per cilium
 
 # Initial phase
-Ψ₀ = repeat([2π, 0.0], outer=[M])
+Ψ₀ = repeat([π + 0.3, 0.0], outer=[M])
 
 # Simulation parameters
-num_periods = 1
-alg = Midpoint()
+num_periods = 5
+alg = Trapezoid(autodiff=false)
+# alg = Euler()
+# Number of timesteps. Set to 0 if using adaptive timestepping
+# num_steps = 1001
+num_steps = 0
 
 # Instance objects
 h = L/(N - 1)
@@ -41,4 +33,4 @@ system = CiliaSystem(
 fluid = FluidParameters(μ)
 
 # Run the system
-solution = run_system(system, fluid, num_periods*T, alg)
+solution = run_system(system, fluid, num_periods*T, alg, num_steps)
