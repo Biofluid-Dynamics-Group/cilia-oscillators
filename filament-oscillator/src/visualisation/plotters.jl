@@ -49,3 +49,21 @@ function plot_system_trajectory(solution::ODESolution)
     display(p)
     return nothing
 end
+
+function plot_at_phase(Ψ::Vector, system::CiliaSystem)
+    system.Ψ .= Ψ
+    x_vector = x(system)
+    p = plot()
+    for j=1:system.params.M
+        positions = zeros(N+1, 3)
+        positions[1, :] = system.x₀[j]
+            for i=1:system.params.N
+                positions[i+1, :] += x_vector[i + (j - 1)N, :]
+            end
+        plot!(p, positions[:, 1], positions[:, 3])
+    end
+    display(p) 
+end
+
+
+# looking at Ψ when the system fails, is it consistent?
