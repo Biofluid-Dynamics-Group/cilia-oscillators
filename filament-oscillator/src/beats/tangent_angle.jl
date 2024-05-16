@@ -157,8 +157,8 @@ function ∂ξ_∂ψ_2(s::Real, ψ::Vector)
     function z_integrand(σ::Real)
         return cos(θ(σ, ψ[1]) + ψ[2]*σ/L + orientation)*σ/L
     end 
-    x = ∫(0.0, s, x_integrand, "trapezoidal")
-    z = ∫(0.0, s, z_integrand, "trapezoidal")
+    x = ∫(0.0, s, x_integrand, rule)
+    z = ∫(0.0, s, z_integrand, rule)
     return [x, 0.0, z]
 end
 
