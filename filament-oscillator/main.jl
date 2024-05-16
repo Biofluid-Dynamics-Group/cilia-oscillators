@@ -1,9 +1,9 @@
 using DifferentialEquations
 using ODEInterfaceDiffEq
 
-include("../src/models/cilia.jl")
-include("../src/models/solver.jl")
-include("../src/models/physical_params.jl")
+include("src/models/cilia.jl")
+include("src/models/solver.jl")
+include("src/models/physical_params.jl")
 
 
 # Initial phase
@@ -14,8 +14,8 @@ num_periods = 5
 alg = Trapezoid(autodiff=false)
 # alg = Euler()
 # Number of timesteps. Set to 0 if using adaptive timestepping
-# num_steps = 1001
-num_steps = 0
+num_steps = 500
+# num_steps = 0
 
 # Instance objects
 h = L/(N - 1)
