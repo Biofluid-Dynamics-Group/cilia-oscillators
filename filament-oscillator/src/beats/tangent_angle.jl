@@ -1,11 +1,10 @@
 using LinearAlgebra
-using FastGaussQuadrature
 
+include("../utils/integral.jl")
 include("../models/physical_params.jl")
 
 
-const order = 10  # Quadrature order
-nodes, weights = gausslegendre(order)
+rule = GaussLegendre(10)
 
 """
     g(u::Real)
@@ -34,28 +33,6 @@ function dg_dx(u::Real)
         return 0.0
     else
         return 4.0*(4.0*u^2 + 1.0)*sech(4.0*u/(4.0*u^2 - 1.0))^2/((1.0 - 4.0*u^2)^2)
-    end
-end
-
-"""
-    ∫(a::Real, b::Real, f::Function, method::String)
-
-Numerically integrates the function `f` on the domain (`a`, `b`) with method `method`.
-"""
-function ∫(a::Real, b::Real, f::Function, method::String)
-    if b - a < eps()
-        return 0.0
-    end
-    if method == "gausslegendre"
-        function fˢ(v::Real)
-            u = (b - a)*v/2.0 + (a + b)/2.0
-            return 2.0/(b - a)*f(u)
-        end
-        return dot(weights, fˢ.(nodes))
-    elseif method == "trapezoidal"
-        Δx = (b - a)/order
-        x = [a + i*Δx for i=0:order]
-        return Δx/2.0*dot(f.(x), vcat([1], 2*ones(order-1), [1]))
     end
 end
 
@@ -117,10 +94,6 @@ Returns the derivative of the tangent angle of the filament during the effective
 at shape phase ψ_1.
 """
 function ∂θ_eff_∂ψ_1(ψ_1::Real)
-    value = -θ_0*sin(ψ_1/(2.0*f_eff))/(2.0*f_eff) 
-    if value < eps()
-        println("∂θ/∂ψ₁ = 0")
-    end
    return -θ_0*sin(ψ_1/(2.0*f_eff))/(2.0*f_eff) 
 end
 
@@ -143,13 +116,13 @@ Returns the position of the filament at arglenth `s` and phase `ψ`.
 """
 function ξ(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return cos(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)
+        return cos(θ(σ, ψ[1]) + ψ[2]*σ/L + orientation)
     end
     function z_integrand(σ::Real)
-        return sin(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)
+        return sin(θ(σ, ψ[1]) + ψ[2]*σ/L + orientation)
     end
-    x = ∫(0.0, s, x_integrand, "trapezoidal")
-    z = ∫(0.0, s, z_integrand, "trapezoidal")
+    x = ∫(0.0, s, x_integrand, rule)
+    z = ∫(0.0, s, z_integrand, rule)
     return [x, 0.0, z]
 end
 
@@ -161,13 +134,13 @@ respect to `ψ_1`.
 """
 function ∂ξ_∂ψ_1(s::Real, ψ::Vector)
     function x_integrand(σ::Real)
-        return -sin(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*∂θ_∂ψ_1(σ, ψ[1])
+        return -sin(θ(σ, ψ[1]) + ψ[2]*σ/L + orientation)*∂θ_∂ψ_1(σ, ψ[1])
     end
     function z_integrand(σ::Real)
-        return cos(θ(σ, ψ[1]) + ψ[2]*s/L + orientation)*∂θ_∂ψ_1(σ, ψ[1])
+        return cos(θ(σ, ψ[1]) + ψ[2]*σ/L + orientation)*∂θ_∂ψ_1(σ, ψ[1])
     end
-    x = ∫(0.0, s, x_integrand, "trapezoidal")
-    z = ∫(0.0, s, z_integrand, "trapezoidal")
+    x = ∫(0.0, s, x_integrand, rule)
+    z = ∫(0.0, s, z_integrand, rule)
     return [x, 0.0, z]
 end
 
