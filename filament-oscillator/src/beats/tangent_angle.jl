@@ -4,7 +4,7 @@ include("../utils/integral.jl")
 include("../models/physical_params.jl")
 
 
-rule = GaussLegendre(10)
+rule = Trapezoidal(20)
 
 """
     g(u::Real)
