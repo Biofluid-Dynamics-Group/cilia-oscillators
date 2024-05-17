@@ -67,7 +67,7 @@ function κₕ(system::CiliaSystem)
     # Initialise array to hold the Kₕ matrices for each cilium
     K_h_matrix_array = zeros(system.params.M, 3system.params.N, 2)
     # Populate the array. Cilia are geometrically independent, so threads can be used
-    @threads for j=1:system.params.M
+    for j=1:system.params.M
         # Each matrix is the stacking of the individual K matrices along the cilium length
         K_h_matrix_array[j, :, :] .= Kₕ(j, system)
     end
@@ -85,8 +85,8 @@ function Πₕ(system::CiliaSystem, fluid::FluidParameters)
     mobility = zeros(3*num_positions, 3*num_positions)
     x_vector = x(system)
     # Forcings depend on positions which are independent, so threads can be used
-    @threads for i = 1:num_positions
-        @threads for j = 1:num_positions
+    for i = 1:num_positions
+        for j = 1:num_positions
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             tensor = RPY_tensor(
@@ -129,10 +129,9 @@ function Q_ref(system::CiliaSystem, fluid::FluidParameters)
     forcings = zeros(2system.params.M)
     # For each individual cilium, calculate the forcing that induces a reference beat
     # independently
-    @threads for j=1:system.params.M
+    for j=1:system.params.M
         K_h_matrix = convert(Matrix{Float64}, Kₕ(j, system))
         forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[ω, 0.0])
-        # println(det(K_h_matrix'*inv(Mₕ(j, system, fluid))K_h_matrix))
     end
     return forcings
 end
