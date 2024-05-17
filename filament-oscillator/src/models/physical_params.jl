@@ -37,4 +37,4 @@ d = d_tilde*a  # Distance between cilia w/r to sphere radius
 T_eff = T*f_eff  # Effective stroke length
 T_rec = T*f_rec  # Recovery stroke length
 w = f_w*L  # Travelling wavelength
-c = (L + 1.5w)/T_rec  # Travelling wave speed
+c = (L + w)/T_rec  # Travelling wave speed

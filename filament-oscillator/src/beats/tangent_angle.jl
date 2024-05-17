@@ -67,7 +67,7 @@ shape phase `ψ_1`.
 """
 function θ_rec(s::Real, ψ_1::Real)
     return θ_0*((1.0 - f_ψ)*sin(0.5*ψ_1/f_rec - 0.5*π) - f_ψ*g(
-        (s - (c*T/2π/f_rec)*ψ_1)/w + 0.5
+        (s - (c*T*ψ_1/2π))/w + 0.5
     ))
 end
 
@@ -94,7 +94,7 @@ Returns the derivative of the tangent angle of the filament during the effective
 at shape phase ψ_1.
 """
 function ∂θ_eff_∂ψ_1(ψ_1::Real)
-   return -θ_0*sin(ψ_1/(2.0*f_eff))/(2.0*f_eff) 
+   return -0.5*θ_0*sin(0.5*ψ_1/f_eff)/f_eff 
 end
 
 """
@@ -104,9 +104,9 @@ Returns the derivative of the tangent angle of the filament during the recovery 
 with respect to `ψ_1` at arclength `s` and shape phase `ψ_1`.
 """
 function ∂θ_rec_∂ψ_1(s::Real, ψ_1::Real)
-    first_term = (1.0 - f_ψ)*cos(ψ_1/(2.0*f_rec) + π/2.0)/(2.0*f_rec)
-    second_term = f_ψ*dg_dx((s - (c*T/2π)*ψ_1)/w + 1.0/2.0)*(c*T/2π)/w
-    return θ_0*(first_term + second_term)
+    first_term = (1.0 - f_ψ)*0.5*cos(0.5*ψ_1/f_rec - 0.5*π)/f_rec
+    second_term = f_ψ*dg_dx((s - (c*T*ψ_1/2π))/w + 0.5)*(-c*T/2π/w)
+    return θ_0*(first_term - second_term)
 end
 
 """
