@@ -2,12 +2,12 @@
 
 # Single cilium geomerty
 a = 1.0  # Sphere radius, reference
-N = 20  # Number of discretisation spheres per cilium
+N = 5  # Number of discretisation spheres per cilium
 sphere_space = 0.2  # Fraction of radii between spheres
 
 # Cilia system geomerty
-M = 1  # Number of cilia
-d_tilde = 100  # Amount of radii between cilia
+M = 2  # Number of cilia
+d_tilde = 50  # Amount of radii between cilia
 φ = 0 # 12.5*π/180.0  # Angle of cilia beat plane
 
 # Single cilium reference beat dynamics
@@ -21,7 +21,7 @@ orientation = π/2.0  # Normal to attachment plane
 
 # Fluid dynamics
 μ = 1.0  # Fluid viscosity, reference
-κ_tilde = 0.03  # Ratio of bending stiffness to viscous drag
+κ_tilde = 0.3  # Ratio of bending stiffness to viscous drag
 
 -
 ###########################################################################################
@@ -35,6 +35,6 @@ d = d_tilde*a  # Distance between cilia w/r to sphere radius
 κ_b = κ_tilde*μ*ω*L^4  # bending stiffness
 
 T_eff = T*f_eff  # Effective stroke length
-T_rec = T - T_eff  # Recovery stroke length
+T_rec = T*f_rec  # Recovery stroke length
 w = f_w*L  # Travelling wavelength
-c = (L + w)/T_rec  # Travelling wave speed
+c = (L + 1.5w)/T_rec  # Travelling wave speed
