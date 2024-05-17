@@ -7,16 +7,16 @@ include("../models/physical_params.jl")
 rule = Trapezoidal(20)
 
 """
-    g(u::Real)
+    g(x::Real)
 
-Returns the value of the transition function `g` for a given argument `u`.
+Returns the value of the transition function `g` for a given argument `x`.
 """
-function g(u::Real)
-    if u ≤ -0.5
+function g(x::Real)
+    if x ≤ -0.5
         return -1.0
-    elseif -0.5 < u && u < 0.5
-        return 2.0*exp(-2.0/(2.0*u + 1.0))/(
-            exp(-2.0/(2.0*u + 1.0)) + exp(2.0/(2.0*u - 1.0))
+    elseif -0.5 < x && x < 0.5
+        return 2.0*exp(-2.0/(2.0*x + 1.0))/(
+            exp(-2.0/(2.0*x + 1.0)) + exp(2.0/(2.0*x - 1.0))
         ) - 1.0
     else
         return 1.0
@@ -24,15 +24,15 @@ function g(u::Real)
 end
 
 """
-    dg_dx(u::Real)
+    dg_dx(x::Real)
 
-Returns the derivative of the transition function `g` at argument `u`.
+Returns the derivative of the transition function `g` at argument `x`.
 """
-function dg_dx(u::Real)
-    if u ≤ -0.5 || u ≥ 0.5
+function dg_dx(x::Real)
+    if x ≤ -0.5 || x ≥ 0.5
         return 0.0
     else
-        return 4.0*(4.0*u^2 + 1.0)*sech(4.0*u/(4.0*u^2 - 1.0))^2/((1.0 - 4.0*u^2)^2)
+        return 4.0*(4.0*x^2 + 1.0)*sech(4.0*x/(4.0*x^2 - 1.0))^2/((1.0 - 4.0*x^2)^2)
     end
 end
 
@@ -56,7 +56,7 @@ end
 Returns the angle of the filament during the effective stroke at shape phase `ψ_1`.
 """
 function θ_eff(ψ_1::Real)
-    return θ_0*cos(ψ_1/(2.0*f_eff))
+    return θ_0*cos(0.5*ψ_1/f_eff)
 end
 
 """
@@ -66,8 +66,8 @@ Returns the tangent angle of the filament during the recovery stroke at arclengt
 shape phase `ψ_1`.
 """
 function θ_rec(s::Real, ψ_1::Real)
-    return θ_0*((1.0 - f_ψ)*sin(ψ_1/(2.0*f_rec) - π/2.0) - f_ψ*g(
-        (s - (c*T/2π)*ψ_1)/w + 0.5
+    return θ_0*((1.0 - f_ψ)*sin(0.5*ψ_1/f_rec - 0.5*π) - f_ψ*g(
+        (s - (c*T/2π/f_rec)*ψ_1)/w + 0.5
     ))
 end
 
