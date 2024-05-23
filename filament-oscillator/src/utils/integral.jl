@@ -1,6 +1,10 @@
+module Integral
+
+
 using FastGaussQuadrature
 using LinearAlgebra
 
+export QuadratureRule, Trapezoidal, GaussLegendre, ∫
 
 abstract type QuadratureRule end
 
@@ -42,4 +46,7 @@ function ∫(a::Real, b::Real, f::Function, rule::GaussLegendre)
         return (b - a)/2.0*f(u)
     end
     return dot(rule.weights, fˢ.(rule.nodes))
+end
+
+
 end

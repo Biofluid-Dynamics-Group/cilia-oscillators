@@ -1,11 +1,11 @@
+include("../src/utils/integral.jl")
+using .Integral
 using Test
 
-include("../src/utils/integral.jl")
-
-atol = 1e-6
+atol = 1e-8
 
 @testset "Trapezoidal" begin
-    trapezoidal = Trapezoidal(5000)
+    trapezoidal = Trapezoidal(15000)
 
     # Test polyonomial integration
     @test ∫(0.0, 1.0, x -> x^2, trapezoidal) ≈ 1/3 atol=atol
@@ -21,7 +21,7 @@ atol = 1e-6
 end
 
 @testset "Gauss-Legendre" begin
-    gausslegendre = GaussLegendre(5)
+    gausslegendre = GaussLegendre(6)
 
     # Test default interval
     @test ∫(-1.0, 1.0, exp, gausslegendre) ≈ exp(1.0) - exp(-1.0) atol=atol
