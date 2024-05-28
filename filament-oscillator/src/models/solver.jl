@@ -26,7 +26,7 @@ function Ψ_dot(system::CiliaSystem, fluid::FluidParameters, t::Real)
     rhs = vcat(background_flow, -force)
     problem = LinearProblem(matrix, rhs)
     solution = solve(problem, KrylovJL_GMRES())
-    dΨ_dt = solution[end-(2*system.params.M - 1):end]
+    dΨ_dt = solution[end-(2*system.sim_params.M - 1):end]
     return dΨ_dt
 end
 
