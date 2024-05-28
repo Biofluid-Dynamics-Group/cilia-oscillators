@@ -16,24 +16,17 @@ function Ψ_dot(system::CiliaSystem, fluid::FluidParameters, t::Real)
     κ_matrix = -κₕ(system)
     matrix = [
         Πₕ(system, fluid) κ_matrix;
-        κ_matrix' zeros(2system.params.M, 2system.params.M)
+        κ_matrix' zeros(2system.sim_params.M, 2system.sim_params.M)
     ]
     elastic_relaxation = cat(
-        [[0.0, -system.params.κ_b*system.Ψ[2j]] for j=1:system.params.M]..., dims=1
+        [[0.0, -system.sim_params.κ_b*system.Ψ[2j]] for j=1:system.sim_params.M]..., dims=1
     )
-    u = repeat([-1.0, 0.0, 0.0]*sin(ω*t), outer=[system.params.M*system.params.N])
-    # system_matrix = inv(κ_matrix'*inv(Πₕ(system, fluid))*κ_matrix)
-    # println("eigenvalues of matrix", eigen(system_matrix).values)
-    # println("....")
+    background_flow = repeat(system.u(t), outer=[system.sim_params.M*system.sim_params.N])
     force = Q + elastic_relaxation
-    # rhs = vcat(zeros(system.params.M*3system.params.N), -force)
-    rhs = vcat(u, -force)
+    rhs = vcat(background_flow, -force)
     problem = LinearProblem(matrix, rhs)
     solution = solve(problem, KrylovJL_GMRES())
     dΨ_dt = solution[end-(2*system.params.M - 1):end]
-    println("t: ", t)
-    println("Ψ: ", system.Ψ)
-    println("dΨ_dt: ", dΨ_dt)
     return dΨ_dt
 end
 
@@ -70,7 +63,7 @@ function run_system(
     problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
     if num_steps != 0
         solution = solve(
-            problem, alg=alg, adaptive=false, dt=time/num_steps, reltol=1e-3, abstol=1e-3)
+            problem, alg=alg, adaptive=false, dt=time/num_steps)
     else
         solution = solve(problem, alg=alg)
     end

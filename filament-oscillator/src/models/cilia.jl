@@ -26,6 +26,7 @@ struct CiliaSystem
     s::Vector{Real}  # Arclength position of discretisation spheres
     A::Matrix{Real}  # Beat plane rotation matrix
     Ψ::Vector{Float64}  # System phase
+    u::Function  # Background flow
 end
 
 """
