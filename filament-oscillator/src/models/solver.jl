@@ -81,7 +81,9 @@ function run_system(
         solution = solve(problem, alg=alg)
     end
     df.time = solution.t
-    df.Ψ = solution.u
+    Ψ = stack(solution.u, dims=1)
+    df.Ψ₁ = Ψ[:, 1]
+    df.Ψ₂ = Ψ[:, 2]
     df.dΨ = p.derivative
     df.forcings = p.forcings
     df.eigenvalues = p.eigenvalues
