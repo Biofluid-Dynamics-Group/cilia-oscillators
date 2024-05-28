@@ -1,5 +1,4 @@
 include("../src/utils/integral.jl")
-
 using .Integral
 using Test
 
