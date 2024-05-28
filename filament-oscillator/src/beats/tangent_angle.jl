@@ -1,5 +1,3 @@
-include("../utils/integral.jl")
-using .Integral
 using LinearAlgebra
 
 
