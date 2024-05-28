@@ -9,7 +9,7 @@ sphere_space = 0.2  # Fraction of radii between spheres
 L = N*(2 + sphere_space)*a  # Cilium length w/r to sphere radius
 
 # Cilia system geomerty
-M = 2  # Number of cilia
+M = 1  # Number of cilia
 d = 50  # Amount of radii between cilia
 φ = 0 # 12.5*π/180.0  # Angle of cilia beat plane
 

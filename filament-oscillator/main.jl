@@ -13,7 +13,7 @@ include("src/models/physical_params.jl")
 # Simulation parameters
 num_periods = 1
 # alg = Trapezoid(autodiff=false)
-alg = ABM54()
+alg = Euler()
 # Number of timesteps. Set to 0 if using adaptive timestepping
 num_steps = 1000
 # num_steps = 0
@@ -45,4 +45,4 @@ system = CiliaSystem(
 fluid = FluidParameters(μ)
 
 # Run the system
-solution = run_system(system, fluid, num_periods*T, alg, num_steps)
+data = run_system(system, fluid, num_periods*T, alg, num_steps)
