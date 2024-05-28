@@ -136,7 +136,7 @@ with respect to `ψ_1` at arclength `s` and shape phase `ψ_1`.
 """
 function ∂θ_rec_∂ψ_1(s::Real, ψ_1::Real, params::BeatParameters)
     first_term = (1.0 - f_ψ)*0.5*cos(0.5*ψ_1/params.f_rec - 0.5*π)/params.f_rec
-    second_term = params.f_ψ*dg_dx((s - (params.c*params.T*ψ_1/2π))/w + 0.5)*(
+    second_term = params.f_ψ*dg_dx((s - (params.c*params.T*ψ_1/2π))/params.w + 0.5)*(
         -params.c*params.T/2π/params.w
     )
     return params.θ_0*(first_term - second_term)
