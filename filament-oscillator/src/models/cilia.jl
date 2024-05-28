@@ -96,7 +96,7 @@ function Πₕ(system::CiliaSystem, fluid::FluidParameters)
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             tensor = rotne_prager_blake_tensor(
-                x_vector[i, :], x_vector[j, :], fluid.μ, system.params.a
+                x_vector[i, :], x_vector[j, :], fluid.μ, system.sim_params.a
             )
             mobility[α:(α + 2), β:(β + 2)] .= tensor
         end
