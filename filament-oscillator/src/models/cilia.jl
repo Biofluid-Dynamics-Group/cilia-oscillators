@@ -119,7 +119,7 @@ function Mₕ(j::Int, system::CiliaSystem, fluid::FluidParameters)
             β = 1 + 3*(j - 1)
             mobility[α:(α + 2), β:(β + 2)] .= rotne_prager_blake_tensor(
                     ξ(system.s[i], ψ, system.beat_params),
-                    ξ(system.s[j], ψ, system.beat_params), fluid.μ, system.params.a
+                    ξ(system.s[j], ψ, system.beat_params), fluid.μ, system.sim_params.a
                 )
         end
     end
