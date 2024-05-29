@@ -75,15 +75,16 @@ function run_system(
     problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
     if num_steps != 0
         solution = solve(
-            problem, alg=alg, adaptive=false, dt=time/num_steps
+            problem, alg=alg, adaptive=false, dt=time/num_steps, progress=true
         )
     else
-        solution = solve(problem, alg=alg)
+        solution = solve(problem, alg=alg, progress=true)
     end
     df.time = solution.t
     Ψ = stack(solution.u, dims=1)
-    df.Ψ₁ = Ψ[:, 1]
-    df.Ψ₂ = Ψ[:, 2]
+    for j=1:2*system.sim_params.M
+        df[!, "Ψ_$j"] = Ψ[:, j]
+    end
     df.dΨ = p.derivative
     df.forcings = p.forcings
     df.eigenvalues = p.eigenvalues
