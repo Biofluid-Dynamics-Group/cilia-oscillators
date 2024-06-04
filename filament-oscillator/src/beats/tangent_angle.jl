@@ -86,7 +86,7 @@ Returns the angle of the filament during the effective stroke at shape phase `ψ
 """
 function θ_eff(ψ_1::Real, params::BeatParameters)
     # return params.θ_0*cos(0.5*ψ_1/params.f_eff)
-    2params.θ_0/(2π*params.f_eff)*ψ_1
+    2params.θ_0/(2π*params.f_eff)*ψ_1 - params.θ_0
 end
 
 """
@@ -100,7 +100,7 @@ function θ_rec(s::Real, ψ_1::Real, params::BeatParameters)
     #     (s - (params.c*params.T*ψ_1/2π))/params.w + 0.5
     # ))
     # return -params.θ_0*cos(0.5*ψ_1/params.f_rec)
-    -2params.θ_0/(2π*params.f_rec)*ψ_1
+    -2params.θ_0/(2π*params.f_rec)*ψ_1 + params.θ_0
 end
 
 """
