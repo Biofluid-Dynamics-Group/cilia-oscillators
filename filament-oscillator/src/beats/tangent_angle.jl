@@ -85,7 +85,8 @@ end
 Returns the angle of the filament during the effective stroke at shape phase `ψ_1`.
 """
 function θ_eff(ψ_1::Real, params::BeatParameters)
-    return params.θ_0*cos(0.5*ψ_1/params.f_eff)
+    # return params.θ_0*cos(0.5*ψ_1/params.f_eff)
+    2params.θ_0/(2π*params.f_eff)*ψ_1
 end
 
 """
@@ -95,9 +96,11 @@ Returns the tangent angle of the filament during the recovery stroke at arclengt
 shape phase `ψ_1`.
 """
 function θ_rec(s::Real, ψ_1::Real, params::BeatParameters)
-    return params.θ_0*((1.0 - params.f_ψ)*sin(0.5*ψ_1/params.f_rec - 0.5*π) - params.f_ψ*g(
-        (s - (params.c*params.T*ψ_1/2π))/params.w + 0.5
-    ))
+    # return params.θ_0*((1.0 - params.f_ψ)*sin(0.5*ψ_1/params.f_rec - 0.5*π) - params.f_ψ*g(
+    #     (s - (params.c*params.T*ψ_1/2π))/params.w + 0.5
+    # ))
+    # return -params.θ_0*cos(0.5*ψ_1/params.f_rec)
+    -2params.θ_0/(2π*params.f_rec)*ψ_1
 end
 
 """
@@ -123,7 +126,8 @@ Returns the derivative of the tangent angle of the filament during the effective
 at shape phase ψ_1.
 """
 function ∂θ_eff_∂ψ_1(ψ_1::Real, params::BeatParameters)
-   return -0.5*params.θ_0*sin(0.5*ψ_1/params.f_eff)/params.f_eff 
+#    return -0.5*params.θ_0*sin(0.5*ψ_1/params.f_eff)/params.f_eff 
+    return 2params.θ_0/(2π*params.f_eff)
 end
 
 """
@@ -133,11 +137,13 @@ Returns the derivative of the tangent angle of the filament during the recovery 
 with respect to `ψ_1` at arclength `s` and shape phase `ψ_1`.
 """
 function ∂θ_rec_∂ψ_1(s::Real, ψ_1::Real, params::BeatParameters)
-    first_term = (1.0 - f_ψ)*0.5*cos(0.5*ψ_1/params.f_rec - 0.5*π)/params.f_rec
-    second_term = params.f_ψ*dg_dx((s - (params.c*params.T*ψ_1/2π))/params.w + 0.5)*(
-        -params.c*params.T/2π/params.w
-    )
-    return params.θ_0*(first_term - second_term)
+    # first_term = (1.0 - f_ψ)*0.5*cos(0.5*ψ_1/params.f_rec - 0.5*π)/params.f_rec
+    # second_term = params.f_ψ*dg_dx((s - (params.c*params.T*ψ_1/2π))/params.w + 0.5)*(
+    #     -params.c*params.T/2π/params.w
+    # )
+    # return params.θ_0*(first_term - second_term)
+    # return 0.5*params.θ_0*sin(0.5*ψ_1/params.f_rec)/params.f_rec 
+    return -2params.θ_0/(2π*params.f_rec)
 end
 
 """
