@@ -93,19 +93,22 @@ function rotne_prager_tensor(x::Vector, y::Vector, μ::Real, a::Real)
     if norm(r) < eps()
         return 1/(6*π*a*μ)*I
     else
-        return 1/(6*π*a*μ)*(3/4*a/norm(r)*(I + r*r') + 1/2*(a/norm(r))^3*(I - 3*r*r'))
+        r_hat = r./norm(r)
+        return 1/(6*π*a*μ)*(
+            3/4*a/norm(r)*(I + r_hat*r_hat') + 1/2*(a/norm(r))^3*(I - 3*r_hat*r_hat')
+        )
     end
 end
 
 function RPY_tensor(x::Vector, y::Vector, μ::Real, a::Real)
     r = x - y
-    if norm(r) > 2.0*a
-        isotropic = (1.0 + 2.0*a^2/(3.0*norm(r)^2))*I
-        parallel = (1.0 - 2.0*a^2/(norm(r)^2))*r*r'
-        return 1.0/(8.0*π*μ*norm(r))*(isotropic + parallel)
+    r_norm = norm(r)
+    r_hat = r./r_norm
+    if r_norm < eps()
+        return 1/(6.0*π*μ*a)*I(3)
     else
-        isotropic = (1.0 - 9.0*norm(r)/(32.0*a))*I
-        parallel = 3.0*norm(r)/(32.0*a)*r*r'
-        return 1/(6.0*π*μ*a)*(isotropic + parallel)
+        return 1/(8.0*π*μ*a)*(
+            (1 + 2*a^2/(3*r_norm^2))*I(3) + (1 - 2*a^2/r_norm^2)*r_hat*r_hat'
+        )
     end
 end
