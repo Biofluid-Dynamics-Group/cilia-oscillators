@@ -73,4 +73,4 @@ fluid = FluidParameters(μ)
 # Run the system
 data, solution = run_system(system, fluid, num_periods*T, alg, num_steps)
 
-# Runs correctly!
+# Does not run correctly :(
