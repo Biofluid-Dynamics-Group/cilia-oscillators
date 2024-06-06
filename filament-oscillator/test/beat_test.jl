@@ -15,7 +15,7 @@ f_w = 0.4                # Travelling wavelength w/r to cilium length
 orientation = π/2.0      # Cilium orientation
 rule = GaussLegendre(15) # Quadrature rule for numerical integration
 beat_params = BeatParameters(L, T, θ_0, f_eff, f_ψ, f_w, orientation, rule)
-ψ₁_array = collect(0.0:0.1:2π)
+ψ₁_array = collect(0.0:0.1:6π)
 ψ₂_array = collect(-π:0.1:π)
 s_array = collect(0.0:0.1:L)
 
@@ -25,7 +25,7 @@ p = plot(xlims=(-L, L), ylims=(0.0, L), legend=false)
     for (i, s) in enumerate(s_array)
         positions[i, :] .= ξ(s, [ψ₁, 0.0], beat_params)
     end
-    plot!(p, positions[:, 1], positions[:, 3])
+    plot(p, positions[:, 1], positions[:, 3])
 end
 
 # p = plot(xlims=(-L, 20.0), ylims=(-L, L), legend=false)
