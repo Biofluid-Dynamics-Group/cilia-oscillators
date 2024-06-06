@@ -17,7 +17,7 @@ L = N*(2 + sphere_space)*a  # Cilium length w/r to sphere radius
 
 # Cilia system geomerty
 M = 2  # Number of cilia
-d = 3*N  # Amount of radii between cilia
+d = 10*N  # Amount of radii between cilia
 φ = 0.0 # 12.5*π/180.0  # Angle of cilia beat plane
 
 # Single cilium reference beat dynamics
@@ -73,4 +73,4 @@ fluid = FluidParameters(μ)
 # Run the system
 data, solution = run_system(system, fluid, num_periods*T, alg, num_steps)
 
-# Does not run correctly :(
+# Sort of runs
