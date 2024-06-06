@@ -12,7 +12,7 @@ This repository contains the source code and documentation for the filament osci
 |04|1|0|oscillatory|0|1|Yes|
 |05|1|0|oscillatory|flow out of phase|1|Yes|
 |06|1|12.5°|0|0|1|Yes|
-|07|2|0|0|0|1|No|
+|07|2|0|0|0|1000|No|
 |08|2|0|0|0|1|No|
 |09|2|0|0|random cilia start|1|No|
 |10|2|12.5°|0|random cilia start|1|No|
