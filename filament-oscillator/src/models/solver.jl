@@ -70,7 +70,7 @@ function run_system(
     df = DataFrame()
     p = (
         system=system, fluid=fluid, derivative=Vector{Float64}[],
-        eigenvalues=Vector{Float64}[], determinant=Float64[], forcings=Vector{Float64}[]
+        eigenvalues=Vector{Number}[], determinant=Float64[], forcings=Vector{Float64}[]
     )
     problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
     if num_steps != 0
@@ -89,5 +89,5 @@ function run_system(
     df.forcings = p.forcings
     df.eigenvalues = p.eigenvalues
     df.determinant = p.determinant
-    return df
+    return df, solution
 end
