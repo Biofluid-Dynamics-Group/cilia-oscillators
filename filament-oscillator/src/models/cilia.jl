@@ -110,16 +110,17 @@ end
 Returns the regularised Stokes mobility matrix mapping forces for the `j`th cilium in the
 system to its velocities. Used to calculate independent forcings.
 """
-function Mₕ(j::Int, system::CiliaSystem, fluid::FluidParameters)
+function Mₕ(k::Int, system::CiliaSystem, fluid::FluidParameters)
     mobility = zeros(3*system.sim_params.N, 3*system.sim_params.N)
-    ψ = system.Ψ[2j - 1:2j]  # Specific cilium phase
+    ψ = system.Ψ[2k - 1:2k]  # Specific cilium phase
     for i = 1:system.sim_params.N
         for j = 1:system.sim_params.N
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             mobility[α:(α + 2), β:(β + 2)] .= RPY_tensor(
-                    ξ(system.s[i], ψ, system.beat_params),
-                    ξ(system.s[j], ψ, system.beat_params), fluid.μ, system.sim_params.a
+                    system.A*ξ(system.s[i], ψ, system.beat_params),
+                    system.A*ξ(system.s[j], ψ, system.beat_params),
+                    fluid.μ, system.sim_params.a
                 )
         end
     end
