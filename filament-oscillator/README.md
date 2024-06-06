@@ -15,4 +15,4 @@ This repository contains the source code and documentation for the filament osci
 |07|2|0|0|0|1000|Slightly wobbly $\psi_1$, $\psi_2$ is very oscillatory|
 |08|2|0|0|0|1|Breaks at the end of the ninth period, and $\psi_2$ varies wildly|
 |09|2|0|0|random cilia start|1|Same as 07|
-|10|2|12.5°|0|random cilia start|1|No|
+|10|2|12.5°|0|random cilia start|1|Same as 07|
