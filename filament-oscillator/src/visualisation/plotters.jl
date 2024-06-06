@@ -11,7 +11,7 @@ include("../models/cilia.jl")
 Animates the cilia movement given the solution `solution` of the ODE.
 """
 function animate_cilia(solution::ODESolution, system::CiliaSystem)
-    Ψ_array = stack(solution.u, dims=1)[begin:size(solution.u)[1]÷100 + 1:end, :]
+    Ψ_array = stack(solution.u, dims=1)[begin:size(solution.u)[1]÷200 + 1:end, :]
     p = plot(
         ylim=(0.0, L*1.1), title="System movement",
         xaxis="x [μm]", yaxis="z [μm]", legend=false
@@ -21,13 +21,13 @@ function animate_cilia(solution::ODESolution, system::CiliaSystem)
     @gif for k = 1:size(Ψ_array)[1]
         system.Ψ .= Ψ_array[k, :]
         x_vector = x(system)
-        for j=1:system.params.M
+        for j=1:system.sim_params.M
             positions = zeros(N+1, 3)
             positions[1, :] = system.x₀[j]
-                for i=1:system.params.N
+                for i=1:system.sim_params.N
                 positions[i+1, :] += x_vector[i + (j - 1)N, :]
             end
-            plot!(p, positions[:, 1], positions[:, 3], color=color_scheme[k])
+            plot(p, positions[:, 1], positions[:, 3], color=color_scheme[k])
         end
     end
     display(p)
@@ -67,3 +67,24 @@ end
 
 
 # looking at Ψ when the system fails, is it consistent?
+
+function animate_cilia(data::DataFrame, system::CiliaSystem)
+    xlimit = system.beat_params.L*1.1*(system.sim_params.M)
+    p = plot(
+        ylim=(0.0, system.beat_params.L*1.1), xlim=(-system.beat_params.L*1.1, xlimit),title="System movement",
+        xaxis="x [μm]", yaxis="z [μm]", legend=false
+        )
+    color_scheme = palette(:twilight, size(data)[1], rev=true)
+    @gif for k = 1:size(data)[1]
+        system.Ψ .= data[k, :Ψ]
+        x_vector = x(system)
+        for j=1:system.sim_params.M
+            positions = zeros(N+1, 3)
+            positions[1, :] = system.x₀[j]
+            for i=1:system.sim_params.N
+                positions[i+1, :] += x_vector[i + (j - 1)N, :]
+            end
+            plot(p, positions[:, 1], positions[:, 3], color=color_scheme[k])
+        end
+    end
+end
