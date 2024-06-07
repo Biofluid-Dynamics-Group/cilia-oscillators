@@ -41,10 +41,11 @@ function rotne_prager_blake_tensor(x::Vector, y::Vector, μ::Real, a::Real)
 end
 
 function rotne_prager_blake_self_mobility(x::Vector, μ::Real, a::Real)
-    X = [1, 1, -1].*x
-    v = -3/16*(a/x[3] - (a/x[3])^3 + 1/3*(a/x[3])^5)
-    δμ = 1/(6.0*π*μ*a)*[v 0 0; 0 v 0; 0 0 2*v]
-    return 1/(6.0*π*μ*a)*I - rotne_prager_tensor(x, X, μ, a) + δμ
+    X = [1., 1., -1.].*x
+    ζ₀ = 6.0*π*μ*a
+    v = -3.0/16.0*(a/x[3] - (a/x[3])^3 + 1.0/3.0*(a/x[3])^5)
+    δμ = 1.0/ζ₀*[v 0. 0.; 0. v 0.; 0. 0. 2.0*v]
+    return 1.0/ζ₀*I(3) - rotne_prager_tensor(x, X, μ, a) + δμ
 end
 
 function rotne_prager_blake_cross_mobility(x::Vector, y::Vector, μ::Real, a::Real)
@@ -93,12 +94,15 @@ end
 
 function rotne_prager_tensor(x::Vector, y::Vector, μ::Real, a::Real)
     r = x - y
-    if norm(r) < eps()
-        return 1/(6*π*a*μ)*I
+    r_norm = norm(r)
+    ζ₀ = 6.0*π*μ*a
+    if r_norm < eps()
+        return 1.0/ζ₀*I(3)
     else
-        r_hat = r./norm(r)
-        return 1/(6*π*a*μ)*(
-            3/4*a/norm(r)*(I + r_hat*r_hat') + 1/2*(a/norm(r))^3*(I - 3*r_hat*r_hat')
+        return 1.0/ζ₀*(
+            0.75*a/r_norm*(
+                I(3) + r*r'/r_norm^2
+            ) + 0.5*a^3/r_norm^3*(I(3) - 3.0*r*r'/(r_norm^2))
         )
     end
 end
