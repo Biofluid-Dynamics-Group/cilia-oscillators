@@ -96,10 +96,11 @@ Returns the tangent angle of the filament during the recovery stroke at arclengt
 shape phase `ψ_1`.
 """
 function θ_rec(s::Real, ψ_1::Real, params::BeatParameters)
-    # return params.θ_0*((1.0 - params.f_ψ)*sin(0.5*ψ_1/params.f_rec - 0.5*π) - params.f_ψ*g(
+    rotation = -2.0/(2π*params.f_rec)*ψ_1 + 1
+    # return params.θ_0*((1.0 - params.f_ψ)*rotation - params.f_ψ*g(
     #     (s - (params.c*params.T*ψ_1/2π))/params.w + 0.5
     # ))
-    -2params.θ_0/(2π*params.f_rec)*ψ_1 + params.θ_0
+    return params.θ_0*rotation
 end
 
 """
@@ -137,11 +138,13 @@ with respect to `ψ_1` at arclength `s` and shape phase `ψ_1`.
 """
 function ∂θ_rec_∂ψ_1(s::Real, ψ_1::Real, params::BeatParameters)
     # first_term = (1.0 - f_ψ)*0.5*cos(0.5*ψ_1/params.f_rec - 0.5*π)/params.f_rec
+    rotation_term = -2.0/(2π*params.f_rec)
+    # first_term = (1.0 - f_ψ)*rotation_term
     # second_term = params.f_ψ*dg_dx((s - (params.c*params.T*ψ_1/2π))/params.w + 0.5)*(
     #     -params.c*params.T/2π/params.w
     # )
     # return params.θ_0*(first_term - second_term)
-    return -2params.θ_0/(2π*params.f_rec)
+    return params.θ_0*rotation_term
 end
 
 """
