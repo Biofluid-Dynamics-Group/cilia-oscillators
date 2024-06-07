@@ -61,7 +61,7 @@ function rotne_prager_blake_cross_mobility(x::Vector, y::Vector, μ::Real, a::Re
         else
             β = 1
         end
-        δμ[α, α] += -z₁*z₂*(1/s^3 - 3*R[α]^2/s^5)
+        δμ[α, α] += -z₁*z₂*(1.0/s^3 - 3.0*R[α]^2/s^5)
         δμ[α, α] += -a^2/s^7*R[3]^2*(4*R[α]^2 - R[β]^2 - R[3]^2)
         δμ[α, α] += -a^4/(3*s^9)*(
             4*R[α]^4 - R[β]^4 + 4*R[3]^4 + 3*R[α]^2*R[β]^2 + 3*R[β]^2*R[3]^2 -
@@ -89,7 +89,7 @@ function rotne_prager_blake_cross_mobility(x::Vector, y::Vector, μ::Real, a::Re
     δμ[3, 3] += -a^4/(3*s^9)*(
         3*(R[1]^4 + R[2]^4) + 6*R[1]^2*R[2]^2 - 24*R[3]^2*(R[1]^2 + R[2]^2) + 8*R[3]^4
     )
-    return rotne_prager_tensor(x, y, μ, a) - rotne_prager_tensor(x, Y, μ, a) + δμ
+    return rotne_prager_tensor(x, y, μ, a) - rotne_prager_tensor(x, Y, μ, a) + 1/(4π*μ)δμ
 end
 
 function rotne_prager_tensor(x::Vector, y::Vector, μ::Real, a::Real)
