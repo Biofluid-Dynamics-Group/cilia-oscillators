@@ -139,9 +139,10 @@ function Q_ref(system::CiliaSystem, fluid::FluidParameters)
     # independently
     for j=1:system.sim_params.M
         K_h_matrix = convert(Matrix{Float64}, Kₕ(j, system))
-        forcings[2j - 1:2j] .= K_h_matrix'*(Mₕ(j, system, fluid)\K_h_matrix*[
+        M_h_matrix = Mₕ(j, system, fluid)
+        forcings[2j - 1:2j] .= K_h_matrix'*inv(M_h_matrix)*K_h_matrix*[
             2π/system.beat_params.T, 0.0
-        ])
+        ]
     end
     return forcings
 end

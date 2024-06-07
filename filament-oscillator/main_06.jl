@@ -2,6 +2,7 @@ include("src/utils/integral.jl")
 using .Integral
 using DifferentialEquations
 using ODEInterfaceDiffEq
+using Plots
 
 include("src/models/solver.jl")
 
@@ -73,4 +74,7 @@ fluid = FluidParameters(μ)
 # Run the system
 data, solution = run_system(system, fluid, num_periods*T, alg, num_steps)
 
-# Runs correctly!
+p1 = plot(data.time, data.Ψ_1, label=["ψ₁"], xlabel="t/T")
+p2 = plot(data.time, data.Ψ_2, label=["ψ₂"], xlabel="t/T")
+p = plot(p1, p2, layout=(1, 2), title="Simulation 06")
+savefig(p, "results/sim06.pdf")
