@@ -111,11 +111,13 @@ function RPY_tensor(x::Vector, y::Vector, μ::Real, a::Real)
     r = x - y
     r_norm = norm(r)
     r_hat = r./r_norm
-    if r_norm < eps()
-        return 1/(6.0*π*μ*a)*I(3)
+    if r_norm > 2a
+        c₁ = 1 + 2*a^2/(3*r_norm^2)
+        c₂ = 1 - 2*a^2/r_norm^2
+        return 1.0/(8.0*π*μ*r_norm)*(c₁*I(3) + c₂*r_hat*r_hat')
     else
-        return 1/(8.0*π*μ*a)*(
-            (1 + 2*a^2/(3*r_norm^2))*I(3) + (1 - 2*a^2/r_norm^2)*r_hat*r_hat'
-        )
+        c₁ = 1 - 9*r_norm/(32*a)
+        c₂ = 3*r_norm/(32*a)
+        return 1.0/(6.0*π*μ*a)*(c₁*I(3) + c₂*r_hat*r_hat')
     end
 end
