@@ -3,20 +3,23 @@ using LinearAlgebra
 
 function oseen_burgers_tensor(x::Vector, y::Vector, μ::Real)
     r = x - y
-    return 1/(8*π*μ)*(I/norm(r) + r*r'/norm(r)^3)
+    r_norm = norm(r)
+    return 1.0/(8.0*π*μ)*(I(3)/r_norm + r*r'/(r_norm^3))
 end
 
 function potential_dipole(x::Vector, y::Vector, μ::Real)
     r = x - y
+    r_norm = norm(r)
     𝛿 = [1 0 0; 0 1 0; 0 0 -1]
-    return 1/(8*π*μ)*(I/norm(r)^3 - 3*r*r'/norm(r)^5)*𝛿
+    return 1/(8*π*μ)*(I(3)/(r_norm^3) - 3*r*r'/(r_norm^5))*𝛿
 end
 
 function stokeslet_doublet(x::Vector, y::Vector, μ::Real)
     r = x - y
+    r_norm = norm(r)
     𝛿 = [1 0 0; 0 1 0; 0 0 -1]
     G_D = potential_dipole(x, y, μ)
-    return 1/(8*π*μ)*(x[1]*G_D + ((x*[1 0 0] - [1; 0; 0]*x')/(norm(r)^3))*𝛿)
+    return r[3]*G_D + 1/(8*π*μ)*((r*[0 0 1] - [0; 0; 1]*r')/(r_norm^3))*𝛿
 end
 
 function blake_tensor(x::Vector, y::Vector, μ::Real)
