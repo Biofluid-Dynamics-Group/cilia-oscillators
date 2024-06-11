@@ -32,7 +32,7 @@ orientation = π/2.0  # Normal to attachment plane
 # Fluid dynamics
 μ = 1.0  # Fluid viscosity, reference
 κ_tilde = 1e0  # Ratio of bending stiffness to viscous drag
-κ_b = κ_tilde*μ*T  # bending stiffness
+κ_b = κ_tilde*μ*L^3*2π/T  # bending stiffness
 
 # Initial phase
 Ψ₀ = repeat([2π, 0.0], outer=[M])
@@ -56,11 +56,11 @@ rule = GaussLegendre(15)
 # Instance objects
 beat_params = BeatParameters(L, T, θ_0, f_eff, f_ψ, f_w, orientation, rule)
 h = L/(N - 1)
-sim_params = SimulationParameters(M, N, φ, d, a, κ_b)
+sim_params = SimulationParameters{Float64, Int16}(M, N, φ, d, a, κ_b)
 x₀ = [[(j - 1)*d, 0.0, 0.0] for j=1:M]
 s = [(i)*h for i=1:N]
 A = [cos(φ) -sin(φ) 0.0; sin(φ) cos(φ) 0.0; 0.0 0.0 1.0]
-system = CiliaSystem(
+system = CiliaSystem{Float64}(
     beat_params,
     sim_params,
     x₀,
@@ -69,7 +69,7 @@ system = CiliaSystem(
     Ψ₀,
     u
 )
-fluid = FluidParameters(μ)
+fluid = FluidParameters{Float64}(μ)
 
 # Run the system
 data, solution = run_system(system, fluid, num_periods*T, alg, num_steps)
