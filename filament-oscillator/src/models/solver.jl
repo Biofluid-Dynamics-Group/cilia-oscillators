@@ -68,9 +68,10 @@ function run_system(
     t_span = (0.0, time)
     Ψ₀ = copy(system.Ψ)
     df = DataFrame()
+    t = typeof(time)
     p = (
-        system=system, fluid=fluid, derivative=Vector{Float64}[],
-        eigenvalues=Vector{Number}[], determinant=Float64[], forcings=Vector{Float64}[]
+        system=system, fluid=fluid, derivative=Vector{t}[],
+        eigenvalues=Vector{t}[], determinant=t[], forcings=Vector{t}[]
     )
     problem = ODEProblem(filament_oscillators!, Ψ₀, t_span, p)
     if num_steps != 0
