@@ -1,26 +1,23 @@
 using LinearAlgebra
 
 
-struct BeatParameters
-    L::Real               # Cilium length
-    T::Real               # Beat period
-    θ_0::Real             # Maximum tangent angle
-    f_eff::Real           # Effective stroke fraction
-    f_ψ::Real             # Fraction of recovery controlled by travelling wave
-    f_w::Real             # Travelling wavelength w/r to cilium length
-    orientation::Real     # Normal angle to the beat plane
-    rule::QuadratureRule  # Quadrature rule for numerical integration
-    T_eff::Real           # Effective stroke duration
-    f_rec::Real           # Recovery stroke fraction
-    T_rec::Real           # Recovery stroke duration
-    w::Real               # Travelling wavelength
-    c::Real               # Travelling wave speed
-    ψ_eff::Real           # Effective stroke phase
-    ψ_rec::Real           # Recovery stroke phase
-    function BeatParameters(
-        L::Real, T::Real, θ_0::Real, f_eff::Real, f_ψ::Real, f_w::Real,
-        orientation::Real, rule::QuadratureRule
-    )
+struct BeatParameters{NumberType<:Real, RuleType<:QuadratureRule}
+    L::NumberType               # Cilium length
+    T::NumberType               # Beat period
+    θ_0::NumberType             # Maximum tangent angle
+    f_eff::NumberType           # Effective stroke fraction
+    f_ψ::NumberType             # Fraction of recovery controlled by travelling wave
+    f_w::NumberType             # Travelling wavelength w/r to cilium length
+    orientation::NumberType     # Normal angle to the beat plane
+    rule::RuleType              # Quadrature rule for numerical integration
+    T_eff::NumberType           # Effective stroke duration
+    f_rec::NumberType           # Recovery stroke fraction
+    T_rec::NumberType           # Recovery stroke duration
+    w::NumberType               # Travelling wavelength
+    c::NumberType               # Travelling wave speed
+    ψ_eff::NumberType           # Effective stroke phase
+    ψ_rec::NumberType           # Recovery stroke phase
+    function BeatParameters(L, T, θ_0, f_eff, f_ψ, f_w, orientation, rule)
         T_eff = T*f_eff
         f_rec = 1.0 - f_eff
         T_rec = T*f_rec
@@ -28,7 +25,7 @@ struct BeatParameters
         c = (L + w)/T_rec
         ψ_eff = 2π*f_eff
         ψ_rec = 2π*f_rec
-        new(
+        new{typeof(θ_0), typeof(rule)}(
             L, T, θ_0, f_eff, f_ψ, f_w, orientation, rule, T_eff, f_rec, T_rec, w, c,
             ψ_eff, ψ_rec
         )
