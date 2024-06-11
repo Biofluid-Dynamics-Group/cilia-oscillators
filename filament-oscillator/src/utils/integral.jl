@@ -8,17 +8,17 @@ export QuadratureRule, Trapezoidal, GaussLegendre, ∫
 
 abstract type QuadratureRule end
 
-struct Trapezoidal <: QuadratureRule
-    order::Int
+struct Trapezoidal{T<:Integer} <: QuadratureRule
+    order::T
 end
 
-struct GaussLegendre <: QuadratureRule
-    order::Int
-    weights::Vector{Real}
-    nodes::Vector{Real}
-    function GaussLegendre(order::Int)
+struct GaussLegendre{IntegerType<:Integer, RealType<:Real} <: QuadratureRule
+    order::IntegerType
+    weights::Vector{RealType}
+    nodes::Vector{RealType}
+    function GaussLegendre(order)
         nodes, weights = gausslegendre(order)
-        return new(order, weights, nodes)
+        return new{typeof(order), typeof(weights[1])}(order, weights, nodes)
     end
 end
 
