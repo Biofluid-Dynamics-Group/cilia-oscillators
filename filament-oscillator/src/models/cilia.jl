@@ -6,27 +6,27 @@ include("../utils/greens_functions.jl")
 include("../utils/algebra.jl")
 
 
-struct FluidParameters
-    μ::Real  # Viscosity
+struct FluidParameters{T<:Real}
+    μ::T  # Viscosity
 end
 
-struct SimulationParameters
-    M::Int  # Number of cilia
-    N::Int  # Number of discretisation spheres per cilium
-    φ::Real  # Angle of cilia beat plane
-    d::Real  # Distance between cilia
-    a::Real  # Radius of discretisation spheres
-    κ_b::Real  # Bending stiffness
+struct SimulationParameters{FloatType<:Real, IntType<:Integer}
+    M::IntType      # Number of cilia
+    N::IntType      # Number of discretisation spheres per cilium
+    φ::FloatType    # Angle of cilia beat plane
+    d::FloatType    # Distance between cilia
+    a::FloatType    # Radius of discretisation spheres
+    κ_b::FloatType  # Bending stiffness
 end
 
-struct CiliaSystem
-    beat_params::BeatParameters  # Beat parameters
+struct CiliaSystem{T<:Real}
+    beat_params::BeatParameters       # Beat parameters
     sim_params::SimulationParameters  # Simulation parameters
-    x₀::Vector{Vector{Real}}  # Basal positions of cilia
-    s::Vector{Real}  # Arclength position of discretisation spheres
-    A::Matrix{Real}  # Beat plane rotation matrix
-    Ψ::Vector{Float64}  # System phase
-    u::Function  # Background flow
+    x₀::Vector{Vector{T}}             # Basal positions of cilia
+    s::Vector{T}                      # Arclength position of discretisation spheres
+    A::Matrix{T}                      # Beat plane rotation matrix
+    Ψ::Vector{T}                      # System phase
+    u::Function                       # Background flow
 end
 
 """
