@@ -2,21 +2,21 @@ using LinearAlgebra
 
 
 struct BeatParameters{NumberType<:Real, RuleType<:QuadratureRule}
-    L::NumberType               # Cilium length
-    T::NumberType               # Beat period
-    θ_0::NumberType             # Maximum tangent angle
-    f_eff::NumberType           # Effective stroke fraction
-    f_ψ::NumberType             # Fraction of recovery controlled by travelling wave
-    f_w::NumberType             # Travelling wavelength w/r to cilium length
-    orientation::NumberType     # Normal angle to the beat plane
-    rule::RuleType              # Quadrature rule for numerical integration
-    T_eff::NumberType           # Effective stroke duration
-    f_rec::NumberType           # Recovery stroke fraction
-    T_rec::NumberType           # Recovery stroke duration
-    w::NumberType               # Travelling wavelength
-    c::NumberType               # Travelling wave speed
-    ψ_eff::NumberType           # Effective stroke phase
-    ψ_rec::NumberType           # Recovery stroke phase
+    L::NumberType            # Cilium length
+    T::NumberType            # Beat period
+    θ_0::NumberType          # Maximum tangent angle
+    f_eff::NumberType        # Effective stroke fraction
+    f_ψ::NumberType          # Fraction of recovery controlled by travelling wave
+    f_w::NumberType          # Travelling wavelength w/r to cilium length
+    orientation::NumberType  # Normal angle to the beat plane
+    rule::RuleType           # Quadrature rule for numerical integration
+    T_eff::NumberType        # Effective stroke duration
+    f_rec::NumberType        # Recovery stroke fraction
+    T_rec::NumberType        # Recovery stroke duration
+    w::NumberType            # Travelling wavelength
+    c::NumberType            # Travelling wave speed
+    ψ_eff::NumberType        # Effective stroke phase
+    ψ_rec::NumberType        # Recovery stroke phase
     function BeatParameters(L, T, θ_0, f_eff, f_ψ, f_w, orientation, rule)
         T_eff = T*f_eff
         f_rec = 1.0 - f_eff
