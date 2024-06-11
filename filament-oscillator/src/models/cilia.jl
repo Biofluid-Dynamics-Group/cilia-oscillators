@@ -38,15 +38,15 @@ with the positions of the `j`th cilium at the `i`th discretisation point given b
 """
 function x(system::CiliaSystem)
     num_positions = system.sim_params.M*system.sim_params.N
-    positions = zeros(num_positions, 3)
+    positions = zeros(3, num_positions)  # Transposed for efficient memory access
     @threads for idx=1:num_positions
         j = ceil(Int, idx / system.sim_params.N)
         i = idx - (j - 1)*system.sim_params.N
-        positions[idx, :] .= system.A*ξ(
+        positions[:, idx] .= system.A*ξ(
             system.s[i], system.Ψ[2j - 1:2j], system.beat_params
         ) + system.x₀[j]
     end
-    return positions
+    return positions'
 end
 
 """
@@ -73,7 +73,7 @@ function κₕ(system::CiliaSystem)
     # Initialise array to hold the Kₕ matrices for each cilium
     K_h_matrix_array = zeros(system.sim_params.M, 3system.sim_params.N, 2)
     # Populate the array. Cilia are geometrically independent, so threads can be used
-    for j=1:system.sim_params.M
+    for j=1:system.sim_params.M  # Inefficient looping...
         # Each matrix is the stacking of the individual K matrices along the cilium length
         K_h_matrix_array[j, :, :] .= Kₕ(j, system)
     end
@@ -91,8 +91,8 @@ function Πₕ(system::CiliaSystem, fluid::FluidParameters)
     mobility = zeros(3*num_positions, 3*num_positions)
     x_vector = x(system)
     # Forcings depend on positions which are independent, so threads can be used
-    for i = 1:num_positions
-        for j = 1:num_positions
+    for j = 1:num_positions
+        for i = 1:num_positions
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             tensor = RPY_tensor(
@@ -113,8 +113,8 @@ system to its velocities. Used to calculate independent forcings.
 function Mₕ(k::Int, system::CiliaSystem, fluid::FluidParameters)
     mobility = zeros(3*system.sim_params.N, 3*system.sim_params.N)
     ψ = system.Ψ[2k - 1:2k]  # Specific cilium phase
-    for i = 1:system.sim_params.N
-        for j = 1:system.sim_params.N
+    for j = 1:system.sim_params.N
+        for i = 1:system.sim_params.N
             α = 1 + 3*(i - 1)
             β = 1 + 3*(j - 1)
             mobility[α:(α + 2), β:(β + 2)] .= RPY_tensor(
