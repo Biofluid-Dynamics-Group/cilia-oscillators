@@ -168,12 +168,12 @@ Returns the derivative of the position of the filament at arglenth `s` and phase
 respect to `ψ_1`.
 """
 function ∂ξ_∂ψ_1(s::Real, ψ::Vector, params::BeatParameters)
-    function x_integrand(σ::Real)
+    function x_integrand(σ::typeof(s))
         return -sin(
             θ(σ, ψ[1], params) + ψ[2]*σ/params.L + params.orientation
         )*∂θ_∂ψ_1(σ, ψ[1], params)
     end
-    function z_integrand(σ::Real)
+    function z_integrand(σ::typeof(s))
         return cos(
             θ(σ, ψ[1], params) + ψ[2]*σ/params.L + params.orientation
         )*∂θ_∂ψ_1(σ, ψ[1], params)
@@ -190,10 +190,10 @@ Returns the derivative of the position of the filament at arglenth `s` and phase
 respect to `ψ_2`.
 """
 function ∂ξ_∂ψ_2(s::Real, ψ::Vector, params::BeatParameters)
-    function x_integrand(σ::Real)
+    function x_integrand(σ::typeof(s))
         return -sin(θ(σ, ψ[1], params) + ψ[2]*σ/params.L + params.orientation)*σ/params.L
     end
-    function z_integrand(σ::Real)
+    function z_integrand(σ::typeof(s))
         return cos(θ(σ, ψ[1], params) + ψ[2]*σ/params.L + params.orientation)*σ/params.L
     end 
     x = ∫(0.0, s, x_integrand, params.rule)
