@@ -109,11 +109,12 @@ function rotne_prager_tensor(x::Vector, y::Vector, μ::Real, a::Real)
 end
 
 function RPY_tensor(x::Vector, y::Vector, μ::Real, a::Real)
+    # Wajnryb, Mizerski, Zuk & Szymczak (2013), equation (3.12)
     r = x - y
     r_norm = norm(r)
     r_hat = r./r_norm
     if r_norm < eps()
-        return 1.0/(6.0*π*μ)*I(3)
+        return 1.0/(6.0*π*μ*a)*I(3)
     elseif r_norm > 2a
         c₁ = 1. + 2.0*a^2/(3.0*r_norm^2)
         c₂ = 1. - 2.0*a^2/r_norm^2
